@@ -1,6 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, create_engine, Date, ForeignKey, \
-    Identity, Integer, String
+from sqlalchemy import Column, create_engine, Date, ForeignKey, Identity, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
@@ -19,7 +18,11 @@ class Album(base_class):
     # __immutable_fields__ = ['album_id', 'created_at']
     album_id = Column('album_id', Integer, Identity(start=200, cycle=True), primary_key=True)
     album_name = Column('album_name', String)
-    account_id = Column('account_id', Integer, ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'))
+    account_id = Column('account_id', Integer, ForeignKey(
+        'account.account_id',
+        ondelete='CASCADE',
+        onupdate='CASCADE'
+    ))
     created_at = Column('created_at', Date, nullable=False)
     edited_at = Column('edited_at', Date, nullable=False)
 
@@ -28,8 +31,16 @@ class Photo(base_class):
     # __immutable_fields__ = ['photo_id', 'created_at']
     photo_id = Column('photo_id', Integer, Identity(start=300, cycle=True), primary_key=True)
     photo_name = Column('photo_name', String)
-    account_id = Column('account_id', Integer, ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'))
-    album_id = Column('album_id', Integer, ForeignKey('album.album_id', ondelete='CASCADE', onupdate='CASCADE'))
+    account_id = Column('account_id', Integer, ForeignKey(
+        'account.account_id',
+        ondelete='CASCADE',
+        onupdate='CASCADE'
+    ))
+    album_id = Column('album_id', Integer, ForeignKey(
+        'album.album_id',
+        ondelete='CASCADE',
+        onupdate='CASCADE'
+    ))
     created_at = Column('created_at', Date, nullable=False)
     edited_at = Column('edited_at', Date, nullable=False)
     file_preview = Column('file_preview', String, nullable=False)
@@ -40,8 +51,16 @@ class Edit(base_class):
     # __immutable_fields__ = ['edit_id', 'photo_id', 'created_at']
     edit_id = Column('edit_id', Integer, Identity(start=400, cycle=True), primary_key=True)
     edit_name = Column('edit_name', String)
-    account_id = Column('account_id', Integer, ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'))
-    photo_id = Column('photo_id', Integer, ForeignKey('photo.photo_id', ondelete='CASCADE', onupdate='CASCADE'))
+    account_id = Column('account_id', Integer, ForeignKey(
+        'account.account_id',
+        ondelete='CASCADE',
+        onupdate='CASCADE'
+    ))
+    photo_id = Column('photo_id', Integer, ForeignKey(
+        'photo.photo_id',
+        ondelete='CASCADE',
+        onupdate='CASCADE'
+    ))
     created_at = Column('created_at', Date, nullable=False)
     edited_at = Column('edited_at', Date, nullable=False)
     file_preview = Column('file_preview', String, nullable=False)
@@ -63,19 +82,21 @@ class Database:
         with Session(self.engine) as session:
             return session.query(Account).filter_by(account_id=account_id).first()
 
-    def select_accounts_by_name(self, account_name_list):
-        with Session(self.engine) as session:
-            return session.query(Account.account_id).filter(Account.account_name.in_(account_name_list)).all()
-
     def insert_accounts(self, account_name_list):
         with Session(self.engine) as session:
             time = get_time()
             for account_name in account_name_list:
                 account = session.query(Account).filter_by(account_name=account_name).first()
                 if account == None:
-                    session.add(Account(account_name=account_name, created_at=time, edited_at=time))
+                    session.add(Account(
+                        account_name=account_name,
+                        created_at=time,
+                        edited_at=time
+                    ))
             session.commit()
-            return self.select_accounts_by_name(account_name_list)
+            return session.query(Account.account_id).filter(
+                Account.account_name.in_(account_name_list)
+            ).all()
 
     def update_account_name(self, account_id, account_name):
         with Session(self.engine) as session:
@@ -108,7 +129,10 @@ class Database:
         with Session(self.engine) as session:
             time = get_time()
             for album_name in album_name_list:
-                album = session.query(Album.album_name).filter_by(account_id=account_id, album_name=album_name).first()
+                album = session.query(Album.album_name).filter_by(
+                    account_id=account_id,
+                    album_name=album_name
+                ).first()
                 if album == None:
                     session.add(Album(
                         album_name=album_name,
@@ -271,4 +295,3 @@ class Database:
                 'edited_at': get_time()
             })
             session.commit()
-
