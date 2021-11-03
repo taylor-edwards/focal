@@ -12,21 +12,21 @@ GRANT CONNECT, USAGE ON DATABASE albumator TO albumator;
 
 -- Destroy all tables and rows:
 --     TRUNCATE edit, photo, album, account RESTART IDENTITY CASCADE;
---     DROP TABLE account_edit, account_photo, account_album, edit, photo, album, account CASCADE;
---     DROP TYPE role, contributor;
+--     DROP TABLE edit_contributor, photo_contributor, album_access, edit, photo, album, account CASCADE;
+--     DROP TYPE permission, contributor;
 
--- Role represents the cumulative privileges to view, update, and delete a resource:
---  idx  role     privilege
--- +---+--------+----------+
--- | 0 | none   | none     |
--- | 1 | viewer | read     |
--- | 2 | editor | write    |
--- | 3 | owner  | delete   |
--- +---+--------+----------+
-CREATE TYPE role AS ENUM ('none', 'viewer', 'editor', 'owner');
+CREATE TYPE permission AS ENUM ('none', 'read', 'add', 'modify');
 
 -- Contributor represents the typed contribution of a person toward producing a resource:
-CREATE TYPE contributor AS ENUM ('other', 'assistant', 'model', 'technician', 'editor', 'photographer', 'director');
+CREATE TYPE contributor AS ENUM (
+    'other',
+    'assistant',
+    'model',
+    'technician',
+    'editor',
+    'photographer',
+    'director'
+);
 
 CREATE TABLE IF NOT EXISTS account (
     account_id SERIAL PRIMARY KEY,
@@ -36,23 +36,34 @@ CREATE TABLE IF NOT EXISTS account (
     deleted_at TIMESTAMP
 );
 
+-- only the album's owner can delete it
 CREATE TABLE IF NOT EXISTS album (
     album_id SERIAL PRIMARY KEY,
+    owner_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     album_name TEXT NOT NULL,
     album_desc TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     edited_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
+-- a photo can belong to many albums but can only be deleted
+-- by its owner (account_id)
 CREATE TABLE IF NOT EXISTS photo (
     photo_id SERIAL PRIMARY KEY,
+    account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     photo_name TEXT NOT NULL,
     photo_desc TEXT,
-    album_id INTEGER REFERENCES album ON UPDATE CASCADE ON DELETE CASCADE,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     edited_at TIMESTAMP NOT NULL DEFAULT now(),
     file_preview TEXT NOT NULL, -- always an HEIC file
     file_source TEXT UNIQUE NOT NULL -- RAW, CR2, TIFF, JPG, etc
+);
+
+-- track which albums each photo belongs to
+CREATE TABLE IF NOT EXISTS photo_album (
+    photo_id INTEGER NOT NULL REFERENCES photo ON UPDATE CASCADE ON DELETE CASCADE,
+    album_id INTEGER NOT NULL REFERENCES album ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY (photo_id, album_id)
 );
 
 CREATE TABLE IF NOT EXISTS edit (
@@ -66,24 +77,27 @@ CREATE TABLE IF NOT EXISTS edit (
     file_source TEXT UNIQUE NOT NULL -- XML, JSON, YAML, etc
 );
 
--- map accounts to albums (many-many) with role recorded per mapping
-CREATE TABLE IF NOT EXISTS account_album (
+-- track account permissions for modifying the contents of each album
+CREATE TABLE IF NOT EXISTS album_access (
     account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     album_id INTEGER NOT NULL REFERENCES album ON UPDATE CASCADE ON DELETE CASCADE,
-    role ROLE NOT NULL DEFAULT 'none'
+    PRIMARY KEY (account_id, album_id),
+    permission PERMISSION NOT NULL DEFAULT 'none'
 );
 
--- map accounts to photos (many-many) with contributor status recorded per mapping
-CREATE TABLE IF NOT EXISTS account_photo (
+-- track contributors for each photo
+CREATE TABLE IF NOT EXISTS photo_contributor (
     account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     photo_id INTEGER NOT NULL REFERENCES photo ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY (account_id, photo_id),
     contributor CONTRIBUTOR NOT NULL DEFAULT 'other'
 );
 
--- map accounts to edits (many-many) with contributor status recorded per mapping
-CREATE TABLE IF NOT EXISTS account_edit (
+-- track contributors for each edit
+CREATE TABLE IF NOT EXISTS edit_contributor (
     account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     edit_id INTEGER NOT NULL REFERENCES edit ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY (account_id, edit_id),
     contributor CONTRIBUTOR NOT NULL DEFAULT 'other'
 );
 
@@ -91,23 +105,23 @@ CREATE TABLE IF NOT EXISTS account_edit (
 INSERT INTO account (account_name) VALUES ('jojo'), ('chumpy'), ('tarzan');
 
 -- insert an album and associate privileges with accounts
-INSERT INTO album (album_name) VALUES ('landscapes');
-INSERT INTO account_album (account_id, album_id, role) VALUES (1, 1, 'owner');
-INSERT INTO account_album (account_id, album_id, role) VALUES (2, 1, 'editor');
+INSERT INTO album (album_name, album_desc, owner_id) VALUES
+    ('Landscapes', 'Photos of mountains mostly', 1);
+INSERT INTO album_access (account_id, album_id, permission) VALUES (1, 1, 'modify');
+INSERT INTO album_access (account_id, album_id, permission) VALUES (2, 1, 'add');
 
--- insert photo and associate contributor status for an account
+-- insert photo, associate a contributor with it, and add it to an album
 INSERT INTO photo (
     photo_name,
-    album_id,
     file_preview,
     file_source
 ) VALUES (
     'mount haruna',
-    (SELECT album_id FROM album LIMIT 1),
     '/path/to/preview.jpg',
     '/path/to/some/file.raw'
 );
-INSERT INTO account_photo (account_id, photo_id, contributor) VALUES (1, 1, 'photographer');
+INSERT INTO photo_contributor (account_id, photo_id, contributor) VALUES (1, 1, 'photographer');
+INSERT INTO photo_album (photo_id, album_id) VALUES (1, (SELECT album_id FROM album LIMIT 1));
 
 -- repeat for another photo with more contributors
 INSERT INTO photo (
@@ -121,9 +135,10 @@ INSERT INTO photo (
     '/path/to/another-preview.jpg',
     '/path/to/some/another-file.raw'
 );
-INSERT INTO account_photo (account_id, photo_id, contributor) VALUES (2, 2, 'photographer');
-INSERT INTO account_photo (account_id, photo_id, contributor) VALUES (1, 2, 'director');
-INSERT INTO account_photo (account_id, photo_id, contributor) VALUES (3, 2, 'editor');
+INSERT INTO photo_contributor (account_id, photo_id, contributor) VALUES (2, 2, 'photographer');
+INSERT INTO photo_contributor (account_id, photo_id, contributor) VALUES (1, 2, 'director');
+INSERT INTO photo_contributor (account_id, photo_id, contributor) VALUES (3, 2, 'editor');
+INSERT INTO photo_album (photo_id, album_id) VALUES (2, (SELECT album_id FROM album LIMIT 1));
 
 -- insert an edit and associate ownership
 INSERT INTO edit (
@@ -137,38 +152,38 @@ INSERT INTO edit (
     '/path/to/preview.jpg',
     '/path/to/some/file.xml'
 );
-INSERT INTO account_edit (account_id, edit_id, contributor) VALUES (1, 1, 'editor');
+INSERT INTO edit_contributor (account_id, edit_id, contributor) VALUES (1, 1, 'editor');
 
 -- grab all accounts
 SELECT account_id, account_name, created_at FROM account WHERE deleted_at IS NULL;
 
 -- grab all albums for an account
-SELECT a.album_id, a.album_name, a.album_desc, a.created_at, a.edited_at FROM account_album AS a_a
+SELECT a.album_id, a.album_name, a.album_desc, a.created_at, a.edited_at FROM album_access AS a_a
 JOIN album AS a ON a_a.album_id = a.album_id
 WHERE a_a.account_id = (SELECT account_id FROM account WHERE deleted_at IS NULL LIMIT 1);
 
 -- grab all photos for an account
-SELECT p.photo_id, p.photo_name, p.photo_desc, p.created_at, p.edited_at, a_p.contributor FROM account_photo AS a_p
+SELECT p.photo_id, p.photo_name, p.photo_desc, p.created_at, p.edited_at, a_p.contributor FROM photo_contributor AS a_p
 JOIN photo AS p ON a_p.photo_id = p.photo_id
 WHERE a_p.account_id = (SELECT account_id FROM account WHERE deleted_at IS NULL LIMIT 1);
 
 -- grab all edits for an account
-SELECT e.edit_id, e.edit_name, e.edit_desc, e.created_at, e.edited_at, a_e.contributor FROM account_edit AS a_e
+SELECT e.edit_id, e.edit_name, e.edit_desc, e.created_at, e.edited_at, a_e.contributor FROM edit_contributor AS a_e
 JOIN edit AS e ON a_e.edit_id = e.edit_id
 WHERE a_e.account_id = (SELECT account_id FROM account WHERE deleted_at IS NULL LIMIT 1);
 
 -- grab all editors for an album
-SELECT account_id, account_name, role FROM (
-    SELECT a.account_id, a.account_name, a.deleted_at, a_a.role FROM account_album AS a_a
+SELECT account_id, account_name, permission FROM (
+    SELECT a.account_id, a.account_name, a.deleted_at, a_a.permission FROM album_access AS a_a
     JOIN account AS a ON a_a.account_id = a.account_id
     WHERE a.deleted_at IS NULL
     AND a_a.album_id = (SELECT album_id FROM album LIMIT 1)
-    AND a_a.role >= 'editor'
+    AND a_a.permission >= 'add'
 ) AS accounts WHERE deleted_at IS NULL;
 
 -- grab all contributors for a photo
 SELECT account_id, account_name, contributor FROM (
-    SELECT a.account_id, a.account_name, a.deleted_at, a_p.contributor FROM account_photo AS a_p
+    SELECT a.account_id, a.account_name, a.deleted_at, a_p.contributor FROM photo_contributor AS a_p
     JOIN account AS a ON a_p.account_id = a.account_id
     WHERE a.deleted_at IS NULL
     AND a_p.photo_id = (SELECT photo_id FROM photo LIMIT 1)
@@ -176,7 +191,7 @@ SELECT account_id, account_name, contributor FROM (
 
 -- grab all contributors for an edit
 SELECT account_id, account_name, contributor FROM (
-    SELECT a.account_id, a.account_name, a.deleted_at, a_e.contributor FROM account_edit AS a_e
+    SELECT a.account_id, a.account_name, a.deleted_at, a_e.contributor FROM edit_contributor AS a_e
     JOIN account AS a ON a_e.account_id = a.account_id
     WHERE a.deleted_at IS NULL
     AND a_e.edit_id = (SELECT edit_id FROM edit LIMIT 1)
@@ -187,7 +202,7 @@ SELECT photo_id, photo_name, created_at, edited_at, file_preview, file_source
 FROM photo WHERE album_id = (SELECT album_id FROM album LIMIT 1);
 
 -- count number of photos for an account
-SELECT count(*) as photo_count FROM account_photo WHERE account_id = (
+SELECT count(*) as photo_count FROM photo_contributor WHERE account_id = (
     SELECT account_id FROM account WHERE deleted_at IS NULL LIMIT 1
 );
 

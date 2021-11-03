@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import Column, create_engine, Date, ForeignKey, Identity, Integer, String
+from sqlalchemy.sql.func import now
+from sqlalchemy import Column, create_engine, DateTime, ForeignKey, Identity, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 
@@ -10,8 +10,9 @@ class Account(base_class):
     # __immutable_fields__ = ['account_id', 'created_at']
     account_id = Column('account_id', Integer, Identity(start=100, cycle=True), primary_key=True)
     account_name = Column('account_name', String(24), unique=True, nullable=False)
-    created_at = Column('created_at', Date, nullable=False)
-    edited_at = Column('edited_at', Date, nullable=False)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
+    deleted_at = Column('deleted_at', DateTime)
 
 class Album(base_class):
     __tablename__ = 'album'
@@ -23,8 +24,8 @@ class Album(base_class):
         ondelete='CASCADE',
         onupdate='CASCADE'
     ))
-    created_at = Column('created_at', Date, nullable=False)
-    edited_at = Column('edited_at', Date, nullable=False)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
 
 class Photo(base_class):
     __tablename__ = 'photo'
@@ -41,8 +42,8 @@ class Photo(base_class):
         ondelete='CASCADE',
         onupdate='CASCADE'
     ))
-    created_at = Column('created_at', Date, nullable=False)
-    edited_at = Column('edited_at', Date, nullable=False)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
     file_preview = Column('file_preview', String, nullable=False)
     file_source = Column('file_source', String, unique=True, nullable=False)
 
@@ -61,13 +62,10 @@ class Edit(base_class):
         ondelete='CASCADE',
         onupdate='CASCADE'
     ))
-    created_at = Column('created_at', Date, nullable=False)
-    edited_at = Column('edited_at', Date, nullable=False)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
     file_preview = Column('file_preview', String, nullable=False)
     file_source = Column('file_source', String, unique=True, nullable=False)
-
-def get_time():
-    return datetime.now().isoformat()
 
 class Database:
     def __init__(self, connection_string):
@@ -84,15 +82,10 @@ class Database:
 
     def insert_accounts(self, account_name_list):
         with Session(self.engine) as session:
-            time = get_time()
             for account_name in account_name_list:
                 account = session.query(Account).filter_by(account_name=account_name).first()
                 if account == None:
-                    session.add(Account(
-                        account_name=account_name,
-                        created_at=time,
-                        edited_at=time
-                    ))
+                    session.add(Account(account_name=account_name))
             session.commit()
             return session.query(Account.account_id).filter(
                 Account.account_name.in_(account_name_list)
@@ -102,7 +95,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Account).filter(Account.account_id == account_id).update({
                 'account_name': account_name,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -127,19 +120,13 @@ class Database:
 
     def insert_albums(self, album_name_list, account_id):
         with Session(self.engine) as session:
-            time = get_time()
             for album_name in album_name_list:
                 album = session.query(Album.album_name).filter_by(
                     account_id=account_id,
                     album_name=album_name
                 ).first()
                 if album == None:
-                    session.add(Album(
-                        album_name=album_name,
-                        account_id=account_id,
-                        created_at=time,
-                        edited_at=time
-                    ))
+                    session.add(Album(album_name=album_name, account_id=account_id))
             session.commit()
             return (
                 session
@@ -153,7 +140,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Album).filter(Album.album_id == album_id).update({
                 'album_name': album_name,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -161,7 +148,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Album).filter(Album.album_id == album_id).update({
                 'account_id': account_id,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -194,13 +181,10 @@ class Database:
             if photo_id != None:
                 return photo_id
 
-            time = get_time()
             session.add(Photo(
                 photo_name=photo_name,
                 account_id=account_id,
                 album_id=album_id,
-                created_at=time,
-                edited_at=time,
                 file_preview=file_preview,
                 file_source=file_source
             ))
@@ -211,7 +195,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Photo).filter(Photo.photo_id == photo_id).update({
                 'photo_name': photo_name,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -219,7 +203,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Photo).filter(Photo.photo_id == photo_id).update({
                 'account_id': account_id,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -227,7 +211,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Photo).filter(Photo.photo_id == photo_id).update({
                 'album_id': album_id,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -236,7 +220,7 @@ class Database:
             session.query(Photo).filter(Photo.photo_id == photo_id).update({
                 'file_preview': file_preview,
                 'file_source': file_source,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -258,13 +242,10 @@ class Database:
             if edit_id != None:
                 return edit_id
 
-            time = get_time()
             session.add(Edit(
                 edit_name=edit_name,
                 account_id=account_id,
                 photo_id=photo_id,
-                created_at=time,
-                edited_at=time,
                 file_preview=file_preview,
                 file_source=file_source
             ))
@@ -275,7 +256,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Edit).filter(Edit.edit_id == edit_id).update({
                 'edit_name': edit_name,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -283,7 +264,7 @@ class Database:
         with Session(self.engine) as session:
             session.query(Edit).filter(Edit.edit_id == edit_id).update({
                 'account_id': account_id,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
 
@@ -292,6 +273,6 @@ class Database:
             session.query(Edit).filter(Edit.edit_id == edit_id).update({
                 'file_preview': file_preview,
                 'file_source': file_source,
-                'edited_at': get_time()
+                'edited_at': now()
             })
             session.commit()
