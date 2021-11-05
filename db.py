@@ -2,70 +2,219 @@ from sqlalchemy.sql.func import now
 from sqlalchemy import Column, create_engine, DateTime, ForeignKey, Identity, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
+from sqlalchemy.types import Enum
 
 base_class = declarative_base()
 
+Permission = Enum('none', 'read', 'write', 'delete', name='permission')
+
+Contributor = Enum(
+    'other', 'assistant', 'model', 'technician', 'editor', 'photographer', 'director'
+    name='contributor'
+)
+
 class Account(base_class):
     __tablename__ = 'account'
-    # __immutable_fields__ = ['account_id', 'created_at']
-    account_id = Column('account_id', Integer, Identity(start=100, cycle=True), primary_key=True)
-    account_name = Column('account_name', String(24), unique=True, nullable=False)
+    account_id = Column(
+        'account_id',
+        Integer,
+        Identity(start=100, cycle=True),
+        primary_key=True
+    )
+    account_name = Column('account_name', String(32), unique=True, nullable=False)
     created_at = Column('created_at', DateTime, nullable=False, default=now())
     edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
     deleted_at = Column('deleted_at', DateTime)
 
-class Album(base_class):
-    __tablename__ = 'album'
-    # __immutable_fields__ = ['album_id', 'created_at']
-    album_id = Column('album_id', Integer, Identity(start=200, cycle=True), primary_key=True)
-    album_name = Column('album_name', String)
-    account_id = Column('account_id', Integer, ForeignKey(
-        'account.account_id',
-        ondelete='CASCADE',
-        onupdate='CASCADE'
-    ))
-    created_at = Column('created_at', DateTime, nullable=False, default=now())
-    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
-
 class Photo(base_class):
     __tablename__ = 'photo'
-    # __immutable_fields__ = ['photo_id', 'created_at']
-    photo_id = Column('photo_id', Integer, Identity(start=300, cycle=True), primary_key=True)
-    photo_name = Column('photo_name', String)
-    account_id = Column('account_id', Integer, ForeignKey(
-        'account.account_id',
-        ondelete='CASCADE',
-        onupdate='CASCADE'
-    ))
-    album_id = Column('album_id', Integer, ForeignKey(
-        'album.album_id',
-        ondelete='CASCADE',
-        onupdate='CASCADE'
-    ))
+    photo_id = Column(
+        'photo_id',
+        Integer,
+        Identity(start=300, cycle=True),
+        primary_key=True
+    )
+    owner_id = Column(
+        'owner_id',
+        Integer,
+        ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE')
+        nullable=False
+    )
+    photo_name = Column('photo_name', String(32))
+    photo_desc = Column('photo_desc', String)
+    file_preview = Column('file_preview', String, unique=True, nullable=False)
+    file_source = Column('file_source', String, unique=True, nullable=False)
     created_at = Column('created_at', DateTime, nullable=False, default=now())
     edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
-    file_preview = Column('file_preview', String, nullable=False)
-    file_source = Column('file_source', String, unique=True, nullable=False)
 
 class Edit(base_class):
     __tablename__ = 'edit'
-    # __immutable_fields__ = ['edit_id', 'photo_id', 'created_at']
-    edit_id = Column('edit_id', Integer, Identity(start=400, cycle=True), primary_key=True)
-    edit_name = Column('edit_name', String)
-    account_id = Column('account_id', Integer, ForeignKey(
-        'account.account_id',
-        ondelete='CASCADE',
-        onupdate='CASCADE'
-    ))
-    photo_id = Column('photo_id', Integer, ForeignKey(
-        'photo.photo_id',
-        ondelete='CASCADE',
-        onupdate='CASCADE'
-    ))
-    created_at = Column('created_at', DateTime, nullable=False, default=now())
-    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
+    edit_id = Column(
+        'edit_id',
+        Integer,
+        Identity(start=400, cycle=True),
+        primary_key=True
+    )
+    photo_id = Column(
+        'photo_id',
+        Integer,
+        ForeignKey('photo.photo_id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False
+    )
+    owner_id = Column(
+        'owner_id',
+        Integer,
+        ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False
+    )
+    edit_name = Column('edit_name', String(32))
+    edit_desc = Column('edit_desc', String)
+    edit_tool = Column('edit_tool', String(32))
     file_preview = Column('file_preview', String, nullable=False)
     file_source = Column('file_source', String, unique=True, nullable=False)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
+
+class Album(base_class):
+    __tablename__ = 'album'
+    album_id = Column(
+        'album_id',
+        Integer,
+        Identity(start=200, cycle=True),
+        primary_key=True
+    )
+    owner_id = Column(
+        'account_id'
+        Integer,
+        ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False
+    )
+    album_name = Column('album_name', String(32))
+    album_desc = Column('album_desc', String)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+    edited_at = Column('edited_at', DateTime, nullable=False, onupdate=now())
+
+class PhotoContributor(base_class):
+    __tablename__ = 'photo_contributor'
+    account_id = Column(
+        'account_id',
+        Integer,
+        ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    photo_id = Column(
+        'photo_id',
+        Integer,
+        ForeignKey('photo.photo_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    contributor = Column('contributor', Contributor, nullable=False, default='photographer')
+    priority = Column('priority', Integer, nullable=False, default=0)
+
+class EditContributor(base_class):
+    __tablename__ = 'edit_contributor'
+    account_id = Column(
+        'account_id',
+        Integer,
+        ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    edit_id = Column(
+        'edit_id',
+        Integer,
+        ForeignKey('edit.edit_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    contributor = Column('contributor', Contributor, nullable=False, default='editor')
+    priority = Column('priority', Integer, nullable=False, default=0)
+
+class AlbumAccess(base_class):
+    __tablename__ = 'album_access'
+    account_id = Column(
+        'account_id',
+        Integer,
+        ForeignKey('account.account_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    album_id = Column(
+        'album_id',
+        Integer,
+        ForeignKey('album.album_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    permission = Column('permission', Permission, nullable=False, default='none')
+
+class AlbumOrder(base_class):
+    __tablename__ = 'album_order'
+    album_id = Column(
+        'album_id',
+        Integer,
+        ForeignKey('album.album_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    edit_id = Column(
+        'edit_id',
+        Integer,
+        ForeignKey('edit.edit_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    priority = Column('priority', Integer, nullable=False, default=0)
+
+class Tag(base_class):
+    __tablename__ = 'tag'
+    tag_id = Column(
+        'tag_id',
+        Integer,
+        Identity(start=200, cycle=True),
+        primary_key=True
+    )
+    tag_name = Column('tag_name', String(24), unique=True, nullable=False)
+    created_at = Column('created_at', DateTime, nullable=False, default=now())
+
+class PhotoTag(base_class):
+    __tablename__ = 'photo_tag'
+    tag_id = Column(
+        'tag_id',
+        Integer,
+        ForeignKey('tag.tag_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    photo_id = Column(
+        'photo_id',
+        Integer,
+        ForeignKey('photo.photo_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+
+class EditTag(base_class):
+    __tablename__ = 'edit_tag'
+    tag_id = Column(
+        'tag_id',
+        Integer,
+        ForeignKey('tag.tag_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    edit_id = Column(
+        'edit_id',
+        Integer,
+        ForeignKey('edit.edit_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+
+class AlbumTag(base_class):
+    __tablename__ = 'album_tag'
+    tag_id = Column(
+        'tag_id',
+        Integer,
+        ForeignKey('tag.tag_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
+    album_id = Column(
+        'album_id',
+        Integer,
+        ForeignKey('album.album_id', ondelete='CASCADE', onupdate='CASCADE'),
+        primary_key=True
+    )
 
 class Database:
     def __init__(self, connection_string):
