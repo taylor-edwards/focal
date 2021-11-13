@@ -1,7 +1,7 @@
--- CREATE USER focal;
--- CREATE SCHEMA focal AUTHORIZATION focal;
--- CREATE DATABASE focal;
--- GRANT CONNECT ON DATABASE focal TO focal;
+CREATE USER focal WITH PASSWORD 'asdf';
+CREATE SCHEMA focal AUTHORIZATION focal;
+CREATE DATABASE focal;
+GRANT CONNECT ON DATABASE focal TO focal;
 
 -- Destroy all tables and rows:
 TRUNCATE account, follow, manufacturer, camera, lens, editor, preview,
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS editor (
 
 -- Previews can be submitted by users or automatically generated
 -- from raw files. They are always stored in HEIC format and are
--- converted and resized when being served to the client.
+-- converted and resized only when being served to the client.
 CREATE TABLE IF NOT EXISTS preview (
     preview_id        SERIAL PRIMARY KEY,
     preview_file_path TEXT UNIQUE NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS reply (
     account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     photo_id   INTEGER REFERENCES photo ON UPDATE CASCADE ON DELETE CASCADE,
     edit_id    INTEGER REFERENCES edit ON UPDATE CASCADE ON DELETE CASCADE,
-    reply_text VARCHAR(500),
+    reply_text VARCHAR(500) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     edited_at  TIMESTAMP CHECK (edited_at > created_at),
     CONSTRAINT single_target CHECK ((photo_id IS NULL) <> (edit_id IS NULL)) -- only specify one foreign key
@@ -213,6 +213,8 @@ CREATE TABLE IF NOT EXISTS notification (
     notify_reason     NOTIFY_REASON NOT NULL,
     read_status       READ_STATUS NOT NULL DEFAULT 'unread',
     created_at        TIMESTAMP NOT NULL DEFAULT now(),
+    -- don't notify users of their own actions
+    CONSTRAINT different_targets CHECK (recipient_id != actor_id),
     -- only specify one foreign key for targeted content
     CONSTRAINT single_target CHECK ((target_photo_id IS NULL) <> (target_edit_id IS NULL)),
     -- only specify one foreign key for generated content / the action taken
@@ -236,6 +238,8 @@ CREATE TABLE IF NOT EXISTS flag (
     reason_text        VARCHAR(500),
     created_at         TIMESTAMP NOT NULL DEFAULT now(),
     UNIQUE (account_id, flagged_account_id, flagged_photo_id, flagged_edit_id, flagged_reply_id),
+    -- users can't flag themselves
+    CONSTRAINT different_targets CHECK (account_id != flagged_account_id),
     -- only specify one foreign key
     CONSTRAINT single_target CHECK (
         (flagged_account_id IS NOT NULL)::INTEGER +

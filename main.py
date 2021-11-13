@@ -1,44 +1,32 @@
 import sys
 from db import Database
+from time import sleep
 
-db = Database('postgresql+psycopg2://albumator:asdf@127.0.0.1:5432/albumator')
-print(f"Added accounts {db.insert_accounts(['chumpy', 'skeletor', 'nacho', 'jojo'])}")
+db = Database('postgresql+psycopg2://focal:asdf@127.0.0.1:5432/focal')
+
+account_list = [ \
+    { 'name': 'chumpy', 'email': 'chumpy@focal.pics' }, \
+    { 'name': 'skeletor', 'email': 'skeletor@focal.pics' }, \
+]
+print(f"Added accounts {db.insert_accounts(account_list)}")
+
+sleep(1)
+
+account_list = [ \
+    { 'name': 'nacho', 'email': 'nacho@focal.pics' }, \
+    { 'name': 'jojo', 'email': 'jojo@focal.pics' } \
+]
+print(f"Added accounts {db.insert_accounts(account_list)}")
+
 db.update_account_name(102, 'cheese')
-print(f"All accounts: {[account.account_name for account in db.select_all_accounts()]}")
-print(f"Added albums {db.insert_albums(['Landscape photos', 'Portraits'], 100)}")
-print(f"Added photo {db.insert_photo('Mt Akina', 100, 200, '/path/to/preview1.jpg', '/path/to/some/file.raw')}")
-print(f"Added edit {db.insert_edit('Mt Akina remix', 100, 300, '/path/to/preview2.jpg', '/path/to/some/file.xml')}")
-print(f"A account's albums: {[album.album_name for album in db.select_account_albums(100)]}")
-print(f"A account's photos: {[photo.photo_name for photo in db.select_account_photos(100)]}")
-print(f"A photo's edits: {[edit.edit_name for edit in db.select_photo_edits(300)]}")
 
-# db.select_all_accounts()
-# db.select_account(account_id)
-# db.select_accounts_by_name(account_name_list)
-# db.insert_accounts(account_name_list)
-# db.update_account_name(account_id, account_name)
-# db.delete_accounts(account_id_list)
-# db.select_album(album_id)
-# db.select_account_albums(account_id)
-# db.insert_albums(album_name_list, account_id)
-# db.update_album_name(album_id, album_name)
-# db.update_album_account_id(album_id, account_id)
-# db.delete_albums(album_id_list)
-# db.select_photo(photo_id)
-# db.select_account_photos(account_id)
-# db.select_album_photos(album_id)
-# db.insert_photo(photo_name, account_id, album_id, file_preview, file_source)
-# db.update_photo_name(photo_id, photo_name)
-# db.update_photo_account_id(photo_id, account_id)
-# db.update_photo_album_id(photo_id, album_id)
-# db.update_photo_files(photo_id, file_preview, file_source)
-# db.select_edit(edit_id)
-# db.select_account_edits(account_id)
-# db.select_photo_edits(photo_id)
-# db.insert_edit(edit_name, account_id, photo_id, file_preview, file_source)
-# db.update_edit_edit_name(edit_id, edit_name)
-# db.update_edit_account_id(edit_id, account_id)
-# db.update_edit_files(edit_id, file_preview, file_source)
+print(f"Renaming account 102: {db.select_account(102).account_name}")
+
+print(f"Deleting accounts: {db.delete_accounts([103])}")
+
+print("All accounts: " + ', '.join([ \
+    f'{account.account_name} ({account.account_id})' for account in db.select_all_accounts() \
+]))
 
 if __name__ == '__main__':
   sys.exit(0)
