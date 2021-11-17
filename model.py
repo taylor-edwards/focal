@@ -30,12 +30,12 @@ Base = declarative_base()
 Account_Role = Enum('admin', 'user', name='account_role')
 
 Misbehavior = Enum(
-    'irrelevant',
-    'inappropriate',
-    'harmful',
-    'impersonation',
-    'plagiarism',
     'other',
+    'impertinent',
+    'inappropriate',
+    'plagiarism',
+    'impersonation',
+    'harmful',
     name='misbehavior'
 )
 
@@ -52,8 +52,9 @@ Notify_Reason = Enum('replied', 'submitted_edit', 'upvoted', name='notify_reason
 
 Read_Status = Enum('unread', 'read', name='read_status')
 
-class Notification(Base): # pylint: disable=too-few-public-methods
-    """Notification model"""
+class Notification(Base):
+    """Notification table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'notification'
     notification_id = Column(
         Integer,
@@ -112,20 +113,17 @@ Follow = Table(
     Column('following_id', ForeignKey('account.account_id'), primary_key=True)
 )
 
-class Account(Base): # pylint: disable=too-few-public-methods
-    """Account model"""
+class Account(Base):
+    """Account table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'account'
-    account_id = Column(Integer, Identity(start=ACCOUNT_ID_BASE, cycle=True), primary_key=True)
+    account_id = Column(Integer, primary_key=True)
     account_role = Column(Account_Role, nullable=False, default='user')
     account_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
     email = Column(String(NAME_LENGTH), unique=True, nullable=False)
     email_verified = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, onupdate=now())
-    banned_at = Column(DateTime)
-    banned_until = Column(DateTime)
-    ban_count = Column(Integer, nullable=False, default=0)
-    ban_reason = Column(Misbehavior)
     CheckConstraint(edited_at > created_at)
     photos = relationship('Photo', back_populates='account', cascade='all, delete')
     edits = relationship('Edit', back_populates='account', cascade='all, delete')
@@ -146,8 +144,9 @@ class Account(Base): # pylint: disable=too-few-public-methods
         primaryjoin=account_id == Notification.recipient_id
     )
 
-class Manufacturer(Base): # pylint: disable=too-few-public-methods
-    """Manufacturer model"""
+class Manufacturer(Base):
+    """Manufacturer table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'manufacturer'
     manufacturer_id = Column(
         Integer,
@@ -158,8 +157,9 @@ class Manufacturer(Base): # pylint: disable=too-few-public-methods
     cameras = relationship('Camera', back_populates='manufacturer')
     lenses = relationship('Lens', back_populates='manufacturer')
 
-class Camera(Base): # pylint: disable=too-few-public-methods
-    """Camera model"""
+class Camera(Base):
+    """Camera table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'camera'
     camera_id = Column(Integer, Identity(start=CAMERA_ID_BASE, cycle=True), primary_key=True)
     manufacturer_id = Column(
@@ -172,8 +172,9 @@ class Camera(Base): # pylint: disable=too-few-public-methods
     manufacturer = relationship('Manufacturer', back_populates='cameras')
     photos = relationship('Photo', back_populates='camera')
 
-class Lens(Base): # pylint: disable=too-few-public-methods
-    """Lens model"""
+class Lens(Base):
+    """Lens table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'lens'
     lens_id = Column(Integer, Identity(start=LENS_ID_BASE, cycle=True), primary_key=True)
     manufacturer_id = Column(
@@ -194,8 +195,9 @@ class Lens(Base): # pylint: disable=too-few-public-methods
     manufacturer = relationship('Manufacturer', back_populates='lenses')
     photos = relationship('Photo', back_populates='lens')
 
-class Editor(Base): # pylint: disable=too-few-public-methods
-    """Editor model"""
+class Editor(Base):
+    """Editor table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'editor'
     editor_id = Column(Integer, Identity(start=EDITOR_ID_BASE, cycle=True), primary_key=True)
     editor_name = Column(String(TITLE_LENGTH), nullable=False)
@@ -204,8 +206,9 @@ class Editor(Base): # pylint: disable=too-few-public-methods
     UniqueConstraint(editor_name, editor_version, editor_platform)
     edits = relationship('Edit', back_populates='editor')
 
-class Preview(Base): # pylint: disable=too-few-public-methods
-    """Preview model"""
+class Preview(Base):
+    """Preview table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'preview'
     preview_id = Column(Integer, Identity(start=PREVIEW_ID_BASE, cycle=True), primary_key=True)
     preview_file_path = Column(String, unique=True, nullable=False)
@@ -223,8 +226,9 @@ Photo_Tag = Table(
     Column('tag_id', ForeignKey('tag.tag_id'), primary_key=True)
 )
 
-class Photo(Base): # pylint: disable=too-few-public-methods
-    """Photo model"""
+class Photo(Base):
+    """Photo table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'photo'
     photo_id = Column(Integer, Identity(start=PHOTO_ID_BASE, cycle=True), primary_key=True)
     account_id = Column(
@@ -277,15 +281,17 @@ class Photo(Base): # pylint: disable=too-few-public-methods
     lens = relationship('Lens', back_populates='photos')
     tags = relationship('Tag', secondary=Photo_Tag, back_populates='photos')
 
-class Tag(Base): # pylint: disable=too-few-public-methods
-    """Tag model"""
+class Tag(Base):
+    """Tag table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'tag'
     tag_id = Column(Integer, Identity(start=TAG_ID_BASE, cycle=True), primary_key=True)
     tag_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
     photos = relationship('Photo', secondary=Photo_Tag, back_populates='tags')
 
-class Edit(Base): # pylint: disable=too-few-public-methods
-    """Edit model"""
+class Edit(Base):
+    """Edit table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'edit'
     edit_id = Column(Integer, Identity(start=EDIT_ID_BASE, cycle=True), primary_key=True)
     account_id = Column(
@@ -325,8 +331,9 @@ class Edit(Base): # pylint: disable=too-few-public-methods
     photo = relationship('Photo', back_populates='edits')
     editor = relationship('Editor', back_populates='edits', uselist=False)
 
-class Reply(Base): # pylint: disable=too-few-public-methods
-    """Reply model"""
+class Reply(Base):
+    """Reply table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'reply'
     reply_id = Column(Integer, Identity(start=REPLY_ID_BASE, cycle=True), primary_key=True)
     account_id = Column(
@@ -352,8 +359,9 @@ class Reply(Base): # pylint: disable=too-few-public-methods
     edit = relationship('Edit', back_populates='replies')
     upvotes = relationship('Upvote', back_populates='reply')
 
-class Upvote(Base): # pylint: disable=too-few-public-methods
-    """Upvote model"""
+class Upvote(Base):
+    """Upvote table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'upvote'
     upvote_id = Column(Integer, Identity(start=UPVOTE_ID_BASE, cycle=True), primary_key=True)
     account_id = Column(
@@ -386,8 +394,9 @@ class Upvote(Base): # pylint: disable=too-few-public-methods
     edit = relationship('Edit', back_populates='upvotes')
     reply = relationship('Reply', back_populates='upvotes')
 
-class Flag(Base): # pylint: disable=too-few-public-methods
-    """Flag model"""
+class Flag(Base):
+    """Flag table"""
+     # pylint: disable=too-few-public-methods
     __tablename__ = 'flag'
     flag_id = Column(Integer, Identity(start=FLAG_ID_BASE, cycle=True), primary_key=True)
     account_id = Column(
@@ -413,7 +422,7 @@ class Flag(Base): # pylint: disable=too-few-public-methods
         ForeignKey('reply.reply_id', onupdate='CASCADE', ondelete='CASCADE')
     )
     flag_reason = Column(Misbehavior, nullable=False)
-    reason_text = Column(String(SHORT_TEXT))
+    flag_text = Column(String(SHORT_TEXT))
     created_at = Column(DateTime, nullable=False, default=now())
     UniqueConstraint(
         account_id,
