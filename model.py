@@ -29,14 +29,14 @@ Base = declarative_base()
 
 Account_Role = Enum('admin', 'user', name='account_role')
 
-Flag_Reason = Enum(
+Misbehavior = Enum(
     'irrelevant',
     'inappropriate',
     'harmful',
     'impersonation',
     'plagiarism',
     'other',
-    name='flag_reason'
+    name='misbehavior'
 )
 
 Platform = Enum(
@@ -125,7 +125,7 @@ class Account(Base): # pylint: disable=too-few-public-methods
     banned_at = Column(DateTime)
     banned_until = Column(DateTime)
     ban_count = Column(Integer, nullable=False, default=0)
-    ban_reason = Column(Flag_Reason)
+    ban_reason = Column(Misbehavior)
     CheckConstraint(edited_at > created_at)
     photos = relationship('Photo', back_populates='account', cascade='all, delete')
     edits = relationship('Edit', back_populates='account', cascade='all, delete')
@@ -412,7 +412,7 @@ class Flag(Base): # pylint: disable=too-few-public-methods
         Integer,
         ForeignKey('reply.reply_id', onupdate='CASCADE', ondelete='CASCADE')
     )
-    flag_reason = Column(Flag_Reason, nullable=False)
+    flag_reason = Column(Misbehavior, nullable=False)
     reason_text = Column(String(SHORT_TEXT))
     created_at = Column(DateTime, nullable=False, default=now())
     UniqueConstraint(
