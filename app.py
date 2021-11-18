@@ -19,6 +19,7 @@ db_session = scoped_session(
         bind=engine
     )
 )
+Base.metadata.create_all(engine)
 Base.query = db_session.query_property()
 
 app = Flask(__name__)

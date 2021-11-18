@@ -24,10 +24,11 @@ EDITOR_ID_BASE       = 1000
 PREVIEW_ID_BASE      = 1100
 NOTIFICATION_ID_BASE = 1200
 FLAG_ID_BASE         = 1300
+BAN_ID_BASE          = 1400
 
 Base = declarative_base()
 
-Account_Role = Enum('admin', 'user', name='account_role')
+AccountRole = Enum('admin', 'user', name='account_role')
 
 Misbehavior = Enum(
     'other',
@@ -48,7 +49,7 @@ Platform = Enum(
     name='platform'
 )
 
-Notify_Reason = Enum('replied', 'submitted_edit', 'upvoted', name='notify_reason')
+NotifyReason = Enum('replied', 'submitted_edit', 'upvoted', name='notify_reason')
 
 Read_Status = Enum('unread', 'read', name='read_status')
 
@@ -87,7 +88,7 @@ class Notification(Base):
         Integer,
         ForeignKey('reply.reply_id', onupdate='CASCADE', ondelete='CASCADE')
     )
-    notify_reason = Column(Notify_Reason, nullable=False)
+    notify_reason = Column(NotifyReason, nullable=False)
     read_status = Column(Read_Status, nullable=False, default='unread')
     created_at = Column(DateTime, nullable=False, default=now())
     CheckConstraint(recipient_id is not actor_id)
@@ -113,12 +114,19 @@ Follow = Table(
     Column('following_id', ForeignKey('account.account_id'), primary_key=True)
 )
 
+AccountBan = Table(
+    'account_ban',
+    Base.metadata,
+    Column('account_id', ForeignKey('account.account_id'), primary_key=True),
+    Column('ban_id', ForeignKey('ban.ban_id'), primary_key=True)
+)
+
 class Account(Base):
     """Account table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'account'
-    account_id = Column(Integer, primary_key=True)
-    account_role = Column(Account_Role, nullable=False, default='user')
+    account_id = Column(Integer, Identity(start=ACCOUNT_ID_BASE, cycle=True), primary_key=True)
+    account_role = Column(AccountRole, nullable=False, default='user')
     account_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
     email = Column(String(NAME_LENGTH), unique=True, nullable=False)
     email_verified = Column(Boolean, nullable=False, default=False)
@@ -139,10 +147,22 @@ class Account(Base):
     )
     notifications = relationship(
         'Notification',
+        primaryjoin=account_id == Notification.recipient_id,
         back_populates='recipient',
-        cascade='all, delete',
-        primaryjoin=account_id == Notification.recipient_id
+        cascade='all, delete'
     )
+    bans = relationship('Ban', secondary=AccountBan, back_populates='accounts')
+
+class Ban(Base):
+    """Ban table"""
+    # pylint: disable=too-few-public-methods
+    __tablename__ = 'ban'
+    ban_id = Column(Integer, Identity(start=BAN_ID_BASE, cycle=True), primary_key=True)
+    banned_at = Column(DateTime)
+    banned_until = Column(DateTime)
+    ban_reason = Column(Misbehavior)
+    ban_text = Column(String(SHORT_TEXT))
+    accounts = relationship('Account', secondary=AccountBan, back_populates='bans')
 
 class Manufacturer(Base):
     """Manufacturer table"""
@@ -219,7 +239,7 @@ class Preview(Base):
     CheckConstraint(preview_width > 0)
     CheckConstraint(preview_height > 0)
 
-Photo_Tag = Table(
+PhotoTag = Table(
     'photo_tag',
     Base.metadata,
     Column('photo_id', ForeignKey('photo.photo_id'), primary_key=True),
@@ -279,7 +299,7 @@ class Photo(Base):
     edits = relationship('Edit', back_populates='photo')
     camera = relationship('Camera', back_populates='photos')
     lens = relationship('Lens', back_populates='photos')
-    tags = relationship('Tag', secondary=Photo_Tag, back_populates='photos')
+    tags = relationship('Tag', secondary=PhotoTag, back_populates='photos')
 
 class Tag(Base):
     """Tag table"""
@@ -287,7 +307,7 @@ class Tag(Base):
     __tablename__ = 'tag'
     tag_id = Column(Integer, Identity(start=TAG_ID_BASE, cycle=True), primary_key=True)
     tag_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
-    photos = relationship('Photo', secondary=Photo_Tag, back_populates='tags')
+    photos = relationship('Photo', secondary=PhotoTag, back_populates='tags')
 
 class Edit(Base):
     """Edit table"""
@@ -399,7 +419,7 @@ class Flag(Base):
      # pylint: disable=too-few-public-methods
     __tablename__ = 'flag'
     flag_id = Column(Integer, Identity(start=FLAG_ID_BASE, cycle=True), primary_key=True)
-    account_id = Column(
+    reporter_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
         nullable=False
@@ -425,7 +445,7 @@ class Flag(Base):
     flag_text = Column(String(SHORT_TEXT))
     created_at = Column(DateTime, nullable=False, default=now())
     UniqueConstraint(
-        account_id,
+        reporter_id,
         flagged_account_id,
         flagged_photo_id,
         flagged_edit_id,
@@ -438,7 +458,7 @@ class Flag(Base):
         (flagged_edit_id is not None) +
         (flagged_reply_id is not None) == 1
     )
-    account = relationship('Account', foreign_keys=account_id)
+    reporter = relationship('Account', foreign_keys=reporter_id)
     flagged_account = relationship('Account', foreign_keys=flagged_account_id)
     flagged_photo = relationship('Photo', foreign_keys=flagged_photo_id)
     flagged_edit = relationship('Edit', foreign_keys=flagged_edit_id)

@@ -4,15 +4,15 @@ CREATE DATABASE focal;
 GRANT CONNECT ON DATABASE focal TO focal;
 
 -- Destroy all tables and rows:
-TRUNCATE account, follow, manufacturer, camera, lens, editor, preview,
+TRUNCATE account, ban, account_ban, follow, manufacturer, camera, lens, editor, preview,
 photo, edit, reply, tag, photo_tag, upvote, notification, flag RESTART IDENTITY CASCADE;
-DROP TABLE account, follow, manufacturer, camera, lens, editor, preview,
-photo, edit, reply, tag, photo_tag, upvote, notification, flag;
-DROP TYPE account_role, flag_reason, platform, notify_reason, read_status;
+DROP TABLE account, ban, account_ban, follow, manufacturer, camera, lens, editor, preview,
+photo, edit, reply, tag, photo_tag, upvote, notification, flag CASCADE;
+DROP TYPE account_role, misbehavior, platform, notify_reason, read_status;
 
 CREATE TYPE account_role AS ENUM ('admin', 'user');
 
-CREATE TYPE flag_reason AS ENUM (
+CREATE TYPE misbehavior AS ENUM (
     'irrelevant',
     'inappropriate',
     'harmful',
@@ -36,11 +36,7 @@ CREATE TABLE IF NOT EXISTS account (
     email_verified BOOLEAN DEFAULT FALSE,
     created_at     TIMESTAMP NOT NULL DEFAULT now(),
     edited_at      TIMESTAMP CHECK (edited_at > created_at),
-    deleted_at     TIMESTAMP,
-    banned_at      TIMESTAMP,
-    banned_until   TIMESTAMP,
-    ban_count      INTEGER NOT NULL DEFAULT 0,
-    ban_reason     FLAG_REASON
+    deleted_at     TIMESTAMP
 );
 
 -- Users can follow each other to customize the feed shown to them on the homepage.
@@ -234,8 +230,8 @@ CREATE TABLE IF NOT EXISTS flag (
     flagged_photo_id   INTEGER REFERENCES photo ON UPDATE CASCADE ON DELETE CASCADE,
     flagged_edit_id    INTEGER REFERENCES edit ON UPDATE CASCADE ON DELETE CASCADE,
     flagged_reply_id   INTEGER REFERENCES reply ON UPDATE CASCADE ON DELETE CASCADE,
-    flag_reason        FLAG_REASON NOT NULL,
-    reason_text        VARCHAR(500),
+    flag_reason        misbehavior NOT NULL,
+    flag_text          VARCHAR(500),
     created_at         TIMESTAMP NOT NULL DEFAULT now(),
     UNIQUE (account_id, flagged_account_id, flagged_photo_id, flagged_edit_id, flagged_reply_id),
     -- users can't flag themselves
@@ -248,3 +244,51 @@ CREATE TABLE IF NOT EXISTS flag (
         (flagged_reply_id   IS NOT NULL)::INTEGER = 1
     )
 );
+
+CREATE TABLE IF NOT EXISTS account_ban (
+    account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
+    ban_id INTEGER NOT NULL REFERENCES ban ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY (account_id, ban_id)
+);
+
+CREATE TABLE IF NOT EXISTS ban (
+    ban_id SERIAL PRIMARY KEY,
+    banned_at TIMESTAMP NOT NULL,
+    banned_until TIMESTAMP,
+    ban_reason misbehavior NOT NULL,
+    ban_text VARCHAR(500)
+);
+
+-- Simple table-based feed builder:
+
+--     CREATE TABLE IF NOT EXISTS feed (
+--         feed_id SERIAL PRIMARY KEY,
+--         account_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
+--         photo_id INTEGER REFERENCES photo ON UPDATE CASCADE ON DELETE CASCADE,
+--         edit_id INTEGER REFERENCES edit ON UPDATE CASCADE ON DELETE CASCADE
+--     );
+--
+--     -- add photos to feed for account_id=102
+--     INSERT INTO feed (account_id, photo_id)
+--     SELECT 102, photo_id FROM photo WHERE account_id IN (
+--         SELECT following_id FROM follow
+--         WHERE follower_id = 102
+--     )
+--     ORDER BY created_at DESC
+--     LIMIT 100;
+--
+--     -- add edits to feed for account_id=102
+--     INSERT INTO FEED (account_id, edit_id)
+--     SELECT 102, edit_id FROM edit WHERE account_id IN (
+--         SELECT following_id FROM follow
+--         WHERE follower_id = 102
+--     )
+--     ORDER BY created_at DESC
+--     LIMIT 100;
+--
+--     -- retrieve feed for account_id=102
+--     SELECT * FROM feed WHERE account_id = 102
+--     FULL OUTER JOIN photo ON feed.photo_id = photo.photo_id
+--     FULL OUTER JOIN edit ON feed.edit_id = edit.photo_id
+--     ORDER BY fcreated_at DESC
+--     LIMIT 10;
