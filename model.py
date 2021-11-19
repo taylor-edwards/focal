@@ -123,7 +123,7 @@ class Account(Base):
     account_id = Column(Integer, AccountIdentity, primary_key=True)
     account_role = Column(AccountRole, nullable=False, default='user')
     account_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
-    email = Column(String(SHORT_TEXT), unique=True, nullable=False)
+    account_email = Column(String(SHORT_TEXT), unique=True, nullable=False)
     verified_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, onupdate=now())
@@ -249,8 +249,7 @@ class Photo(Base):
     )
     preview_id = Column(
         Integer,
-        ForeignKey('preview.preview_id', onupdate='CASCADE', ondelete='RESTRICT'),
-        nullable=False
+        ForeignKey('preview.preview_id', onupdate='CASCADE', ondelete='RESTRICT')
     )
     camera_id = Column(
         Integer,
@@ -263,8 +262,8 @@ class Photo(Base):
     photo_title = Column(String(TITLE_LENGTH))
     photo_description = Column(String(LONG_TEXT))
     raw_file_path = Column(String, unique=True, nullable=False)
-    raw_file_extension = Column(String(20), unique=True, nullable=False)
-    raw_file_size = Column(Integer, unique=True, nullable=False)
+    raw_file_extension = Column(String(20), nullable=False)
+    raw_file_size = Column(Integer, nullable=False)
     raw_width = Column(Integer)
     raw_height = Column(Integer)
     aperture = Column(Float)
@@ -312,8 +311,7 @@ class Edit(Base):
     )
     preview_id = Column(
         Integer,
-        ForeignKey('preview.preview_id', onupdate='CASCADE', ondelete='RESTRICT'),
-        nullable=False
+        ForeignKey('preview.preview_id', onupdate='CASCADE', ondelete='RESTRICT')
     )
     photo_id = Column(
         Integer,

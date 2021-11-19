@@ -1,0 +1,156 @@
+{
+  accounts {
+    accountId
+    accountName
+  }
+  account(accountId: 102) {
+    accountId
+    accountRole
+    accountName
+    accountEmail
+    createdAt
+    verifiedAt
+    editedAt
+    bans {
+      bannedAt
+      bannedUntil
+      banReason
+      banText
+    }
+    notifications {
+      notifyReason
+      targetPhotoId
+      targetEditId
+      createdEditId
+      createdReplyId
+    }
+    photos {
+      photoId
+      photoTitle
+      photoDescription
+      rawWidth
+      rawHeight
+      aperture
+      focalLength
+      iso
+      shutterSpeedDenominator
+      shutterSpeedNumerator
+      replies {
+        replyId
+        replyText
+        createdAt
+      }
+      edits {
+        editId
+        editTitle
+        editDescription
+        editFilePath
+        editFileExtension
+        editFileSize
+        editWidth
+        editHeight
+        createdAt
+        editedAt
+        editor {
+          editorId
+          editorName
+          editorVersion
+          editorPlatform
+        }
+      }
+      upvotes {
+        upvoteId
+        upvotedPhotoId
+        upvotedEditId
+        upvotedReplyId
+      }
+      camera {
+        cameraId
+        cameraModel
+        manufacturer {
+          manufacturerId
+          manufacturerName
+        }
+      }
+      lens {
+        lensId
+        lensModel
+        manufacturer {
+          manufacturerId
+          manufacturerName
+        }
+      }
+    }
+    edits {
+      editId
+      editTitle
+      editDescription
+      editFilePath
+      editFileExtension
+      editFileSize
+      editWidth
+      editHeight
+      createdAt
+      editedAt
+      editor {
+        editorId
+        editorName
+        editorVersion
+        editorPlatform
+      }
+      photo {
+        photoId
+        photoTitle
+        photoDescription
+        preview {
+          previewId
+          previewFilePath
+        }
+      }
+    }
+  }
+  tags {
+    tagId
+    tagName
+  }
+  cameras {
+    cameraId
+    cameraModel
+  }
+  lenses {
+    lensId
+    lensModel
+    apertureMin
+    apertureMax
+    focalLengthMin
+    focalLengthMax
+  }
+  manufacturers {
+    manufacturerId
+    manufacturerName
+  }
+  photos {
+    photoId
+    photoTitle
+    preview {
+      previewId
+      previewFilePath
+    }
+    account {
+      accountId
+      accountName
+    }
+  }
+  edits {
+    editId
+    editTitle
+    preview {
+      previewId
+      previewFilePath
+    }
+    account {
+      accountId
+      accountName
+    }
+  }
+}
