@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS account (
     account_role   ACCOUNT_ROLE NOT NULL DEFAULT 'user',
     account_name   VARCHAR(32) UNIQUE NOT NULL,
     email          VARCHAR(200) UNIQUE NOT NULL,
-    email_verified BOOLEAN DEFAULT FALSE,
+    verified_at    TIMESTAMP,
     created_at     TIMESTAMP NOT NULL DEFAULT now(),
     edited_at      TIMESTAMP CHECK (edited_at > created_at),
     deleted_at     TIMESTAMP

@@ -10,22 +10,6 @@ NAME_LENGTH  =   32
 TITLE_LENGTH =  100
 SHORT_TEXT   =  500
 LONG_TEXT    = 2500
-
-ACCOUNT_ID_BASE      =  100
-PHOTO_ID_BASE        =  200
-EDIT_ID_BASE         =  300
-REPLY_ID_BASE        =  400
-UPVOTE_ID_BASE       =  500
-TAG_ID_BASE          =  600
-MANUFACTURER_ID_BASE =  700
-CAMERA_ID_BASE       =  800
-LENS_ID_BASE         =  900
-EDITOR_ID_BASE       = 1000
-PREVIEW_ID_BASE      = 1100
-NOTIFICATION_ID_BASE = 1200
-FLAG_ID_BASE         = 1300
-BAN_ID_BASE          = 1400
-
 Base = declarative_base()
 
 AccountRole = Enum('admin', 'user', name='account_role')
@@ -51,17 +35,28 @@ Platform = Enum(
 
 NotifyReason = Enum('replied', 'submitted_edit', 'upvoted', name='notify_reason')
 
-Read_Status = Enum('unread', 'read', name='read_status')
+ReadStatus = Enum('unread', 'read', name='read_status')
+
+AccountIdentity      = Identity('Account',      start= 100, cycle=True)
+PhotoIdentity        = Identity('Photo',        start= 200, cycle=True)
+EditIdentity         = Identity('Edit',         start= 300, cycle=True)
+ReplyIdentity        = Identity('Reply',        start= 400, cycle=True)
+UpvoteIdentity       = Identity('Upvote',       start= 500, cycle=True)
+TagIdentity          = Identity('Tag',          start= 600, cycle=True)
+EditorIdentity       = Identity('Editor',       start= 700, cycle=True)
+CameraIdentity       = Identity('Camera',       start= 800, cycle=True)
+LensIdentity         = Identity('Lens',         start= 900, cycle=True)
+ManufacturerIdentity = Identity('Manufacturer', start=1000, cycle=True)
+PreviewIdentity      = Identity('Preview',      start=1100, cycle=True)
+NotificationIdentity = Identity('Notification', start=1200, cycle=True)
+FlagIdentity         = Identity('Flag',         start=1300, cycle=True)
+BanIdentity          = Identity('Ban',          start=1400, cycle=True)
 
 class Notification(Base):
     """Notification table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'notification'
-    notification_id = Column(
-        Integer,
-        Identity(start=NOTIFICATION_ID_BASE, cycle=True),
-        primary_key=True
-    )
+    notification_id = Column(Integer, NotificationIdentity, primary_key=True)
     recipient_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
@@ -89,7 +84,7 @@ class Notification(Base):
         ForeignKey('reply.reply_id', onupdate='CASCADE', ondelete='CASCADE')
     )
     notify_reason = Column(NotifyReason, nullable=False)
-    read_status = Column(Read_Status, nullable=False, default='unread')
+    read_status = Column(ReadStatus, nullable=False, default='unread')
     created_at = Column(DateTime, nullable=False, default=now())
     CheckConstraint(recipient_id is not actor_id)
     CheckConstraint(
@@ -125,11 +120,11 @@ class Account(Base):
     """Account table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'account'
-    account_id = Column(Integer, Identity(start=ACCOUNT_ID_BASE, cycle=True), primary_key=True)
+    account_id = Column(Integer, AccountIdentity, primary_key=True)
     account_role = Column(AccountRole, nullable=False, default='user')
     account_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
-    email = Column(String(NAME_LENGTH), unique=True, nullable=False)
-    email_verified = Column(Boolean, nullable=False, default=False)
+    email = Column(String(SHORT_TEXT), unique=True, nullable=False)
+    verified_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, onupdate=now())
     CheckConstraint(edited_at > created_at)
@@ -157,7 +152,7 @@ class Ban(Base):
     """Ban table"""
     # pylint: disable=too-few-public-methods
     __tablename__ = 'ban'
-    ban_id = Column(Integer, Identity(start=BAN_ID_BASE, cycle=True), primary_key=True)
+    ban_id = Column(Integer, BanIdentity, primary_key=True)
     banned_at = Column(DateTime)
     banned_until = Column(DateTime)
     ban_reason = Column(Misbehavior)
@@ -168,11 +163,7 @@ class Manufacturer(Base):
     """Manufacturer table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'manufacturer'
-    manufacturer_id = Column(
-        Integer,
-        Identity(start=MANUFACTURER_ID_BASE, cycle=True),
-        primary_key=True
-    )
+    manufacturer_id = Column(Integer, ManufacturerIdentity, primary_key=True)
     manufacturer_name = Column(String(TITLE_LENGTH), unique=True, nullable=False)
     cameras = relationship('Camera', back_populates='manufacturer')
     lenses = relationship('Lens', back_populates='manufacturer')
@@ -181,7 +172,7 @@ class Camera(Base):
     """Camera table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'camera'
-    camera_id = Column(Integer, Identity(start=CAMERA_ID_BASE, cycle=True), primary_key=True)
+    camera_id = Column(Integer, CameraIdentity, primary_key=True)
     manufacturer_id = Column(
         Integer,
         ForeignKey('manufacturer.manufacturer_id', onupdate='CASCADE', ondelete='RESTRICT'),
@@ -196,7 +187,7 @@ class Lens(Base):
     """Lens table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'lens'
-    lens_id = Column(Integer, Identity(start=LENS_ID_BASE, cycle=True), primary_key=True)
+    lens_id = Column(Integer, LensIdentity, primary_key=True)
     manufacturer_id = Column(
         Integer,
         ForeignKey('manufacturer.manufacturer_id', onupdate='CASCADE', ondelete='RESTRICT'),
@@ -219,7 +210,7 @@ class Editor(Base):
     """Editor table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'editor'
-    editor_id = Column(Integer, Identity(start=EDITOR_ID_BASE, cycle=True), primary_key=True)
+    editor_id = Column(Integer, EditorIdentity, primary_key=True)
     editor_name = Column(String(TITLE_LENGTH), nullable=False)
     editor_version = Column(String(20))
     editor_platform = Column(Platform)
@@ -230,7 +221,7 @@ class Preview(Base):
     """Preview table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'preview'
-    preview_id = Column(Integer, Identity(start=PREVIEW_ID_BASE, cycle=True), primary_key=True)
+    preview_id = Column(Integer, PreviewIdentity, primary_key=True)
     preview_file_path = Column(String, unique=True, nullable=False)
     preview_file_size = Column(Integer, nullable=False)
     preview_width = Column(Integer, nullable=False)
@@ -250,7 +241,7 @@ class Photo(Base):
     """Photo table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'photo'
-    photo_id = Column(Integer, Identity(start=PHOTO_ID_BASE, cycle=True), primary_key=True)
+    photo_id = Column(Integer, PhotoIdentity, primary_key=True)
     account_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
@@ -305,7 +296,7 @@ class Tag(Base):
     """Tag table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'tag'
-    tag_id = Column(Integer, Identity(start=TAG_ID_BASE, cycle=True), primary_key=True)
+    tag_id = Column(Integer, TagIdentity, primary_key=True)
     tag_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
     photos = relationship('Photo', secondary=PhotoTag, back_populates='tags')
 
@@ -313,7 +304,7 @@ class Edit(Base):
     """Edit table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'edit'
-    edit_id = Column(Integer, Identity(start=EDIT_ID_BASE, cycle=True), primary_key=True)
+    edit_id = Column(Integer, EditIdentity, primary_key=True)
     account_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
@@ -355,7 +346,7 @@ class Reply(Base):
     """Reply table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'reply'
-    reply_id = Column(Integer, Identity(start=REPLY_ID_BASE, cycle=True), primary_key=True)
+    reply_id = Column(Integer, ReplyIdentity, primary_key=True)
     account_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
@@ -383,7 +374,7 @@ class Upvote(Base):
     """Upvote table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'upvote'
-    upvote_id = Column(Integer, Identity(start=UPVOTE_ID_BASE, cycle=True), primary_key=True)
+    upvote_id = Column(Integer, UpvoteIdentity, primary_key=True)
     account_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
@@ -418,7 +409,7 @@ class Flag(Base):
     """Flag table"""
      # pylint: disable=too-few-public-methods
     __tablename__ = 'flag'
-    flag_id = Column(Integer, Identity(start=FLAG_ID_BASE, cycle=True), primary_key=True)
+    flag_id = Column(Integer, FlagIdentity, primary_key=True)
     reporter_id = Column(
         Integer,
         ForeignKey('account.account_id', onupdate='CASCADE', ondelete='CASCADE'),
