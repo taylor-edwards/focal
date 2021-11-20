@@ -1,6 +1,6 @@
 """Graphene schema for GraphQL support"""
 
-from graphene import Argument, Field, ID, List, ObjectType, Schema
+from graphene import Argument, Field, ID, List, ObjectType, Schema, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from model import (
     Notification as NotificationModel,
@@ -120,11 +120,19 @@ class Flag(SQLAlchemyObjectType):
 class Query(ObjectType):
     """Wrapper for all queries"""
     # pylint: disable=too-many-public-methods
-    account = Field(Account, account_id=Argument(type=ID, required=True))
-    def resolve_account(self, info, account_id=None):
+    account = Field(Account, account_id=Argument(type=ID), account_name=Argument(type=String))
+    def resolve_account(self, info, account_id=None, account_name=None):
         """Query for account by ID"""
-         # pylint: disable=no-self-use
-        return Account.get_query(info=info).filter(AccountModel.account_id == account_id).first()
+        # pylint: disable=no-self-use
+        if account_id is not None:
+            return Account.get_query(info=info) \
+                          .filter(AccountModel.account_id == account_id) \
+                          .first()
+        if account_name is not None:
+            return Account.get_query(info=info) \
+                          .filter(AccountModel.account_name == account_name) \
+                          .first()
+        return None
 
     accounts = List(Account)
     def resolve_accounts(self, info):

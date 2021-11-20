@@ -1,9 +1,9 @@
-{
+query QueryAll($accountId: ID!) {
   accounts {
     accountId
     accountName
   }
-  account(accountId: 102) {
+  account(accountId: $accountId) {
     accountId
     accountRole
     accountName
@@ -35,6 +35,10 @@
       iso
       shutterSpeedDenominator
       shutterSpeedNumerator
+      preview {
+        previewId
+        previewFilePath
+      }
       replies {
         replyId
         replyText
@@ -79,6 +83,10 @@
           manufacturerId
           manufacturerName
         }
+      }
+      tags {
+        tagId
+        tagName
       }
     }
     edits {

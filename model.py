@@ -124,6 +124,10 @@ class Account(Base):
     account_role = Column(AccountRole, nullable=False, default='user')
     account_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
     account_email = Column(String(SHORT_TEXT), unique=True, nullable=False)
+    # preview_id = Column(
+    #     Integer,
+    #     ForeignKey('preview.preview_id', onupdate='CASCADE', ondelete='RESTRICT')
+    # )
     verified_at = Column(DateTime)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, onupdate=now())
@@ -146,6 +150,7 @@ class Account(Base):
         back_populates='recipient',
         cascade='all, delete'
     )
+    # preview = relationship('Preview', uselist=False)
     bans = relationship('Ban', secondary=AccountBan, back_populates='accounts')
 
 class Ban(Base):

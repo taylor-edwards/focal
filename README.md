@@ -29,7 +29,7 @@ Whenver you're done running Focal, remember to exit the virtual environment we a
 deactivate
 ```
 
-### Start the application server
+### Start the server
 
 ```
 source ./.venv/bin/activate
