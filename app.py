@@ -59,7 +59,39 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 
 from model import Base
 from schema import schema
-import db
+from handlers import (
+    create_account,
+    update_account,
+    delete_account,
+    create_photo,
+    update_photo,
+    delete_photo,
+    create_edit,
+    update_edit,
+    delete_edit,
+    create_reply,
+    update_reply,
+    delete_reply,
+    create_upvote,
+    delete_upvote,
+    create_preview,
+    update_preview,
+    delete_preview,
+    create_tag,
+    delete_tag,
+    create_editor,
+    update_editor,
+    delete_editor,
+    create_camera,
+    update_camera,
+    delete_camera,
+    create_lens,
+    update_lens,
+    delete_lens,
+    create_manufacturer,
+    update_manufacturer,
+    delete_manufacturer
+)
 
 engine = create_engine('postgresql+psycopg2://focal:asdf@127.0.0.1:5432/focal')
 db_session = scoped_session(
@@ -85,7 +117,7 @@ app.add_url_rule(
 )
 
 @app.route('/account', methods=['PUT'])
-def create_account():
+def handle_create_account():
     """Flask route for creating an account"""
     account_options = request.json
     if account_options is None:
@@ -97,14 +129,14 @@ def create_account():
 
     account = None
     if 'account_role' in account_option_keys:
-        account = db.create_account(
+        account = create_account(
             engine,
             account_options['account_name'],
             account_options['account_email'],
             account_options['account_role']
         )
     else:
-        account = db.create_account(
+        account = create_account(
             engine,
             account_options['account_name'],
             account_options['account_email']
@@ -115,269 +147,260 @@ def create_account():
     return jsonify({ 'accountId': account.account_id }), 201
 
 @app.route('/account/<account_id>', methods=['POST'])
-def update_account(account_id):
+def handle_update_account(account_id):
     """Flask route for updating an account"""
     account_options = request.json
     if account_options is None:
         return 'Bad request', 400
-    db.update_account(engine, account_id, **account_options)
+    update_account(engine, account_id, **account_options)
     return '', 200
 
 @app.route('/account/<account_id>', methods=['DELETE'])
-def delete_account(account_id):
+def handle_delete_account(account_id):
     """Flask route for deleting an account"""
-    db.delete_account(engine, account_id)
+    delete_account(engine, account_id)
     return '', 204
 
 @app.route('/photo', methods=['PUT'])
-def create_photo():
+def handle_create_photo():
     """Flask route for creating a photo"""
     photo_options = request.json
     if photo_options is None:
         return 'Bad request', 400
-    photo = db.create_photo(engine, **photo_options)
+    photo = create_photo(engine, **photo_options)
     if photo is None:
         return 'Failed to create', 500
     return jsonify({ 'photoId': photo.photo_id }), 201
 
 @app.route('/photo/<photo_id>', methods=['POST'])
-def update_photo(photo_id):
+def handle_update_photo(photo_id):
     """Flask route for updating a photo"""
     photo_options = request.json
     if photo_options is None:
         return 'Bad request', 400
-    db.update_photo(engine, photo_id, **photo_options)
+    update_photo(engine, photo_id, **photo_options)
     return '', 200
 
 @app.route('/photo/<photo_id>', methods=['DELETE'])
-def delete_photo(photo_id):
+def handle_delete_photo(photo_id):
     """Flask route for deleting a photo"""
-    db.delete_photo(engine, photo_id)
+    delete_photo(engine, photo_id)
     return '', 204
 
 @app.route('/edit', methods=['PUT'])
-def create_edit():
+def handle_create_edit():
     """Flask route for creating an edit"""
     edit_options = request.json
     if edit_options is None:
         return 'Bad request', 400
-    edit = db.create_edit(engine, **edit_options)
+    edit = create_edit(engine, **edit_options)
     if edit is None:
         return 'Failed to create', 500
     return jsonify({ 'editId': edit.edit_id }), 201
 
 @app.route('/edit/<edit_id>', methods=['POST'])
-def update_edit(edit_id):
+def handle_update_edit(edit_id):
     """Flask route for updating an edit"""
     edit_options = request.json
     if edit_options is None:
         return 'Bad request', 400
-    db.update_edit(engine, edit_id, **edit_options)
+    update_edit(engine, edit_id, **edit_options)
     return '', 200
 
 @app.route('/edit/<edit_id>', methods=['DELETE'])
-def delete_edit(edit_id):
+def handle_delete_edit(edit_id):
     """Flask route for deleting an edit"""
-    db.delete_edit(engine, edit_id)
+    delete_edit(engine, edit_id)
     return '', 204
 
 @app.route('/reply', methods=['PUT'])
-def create_reply():
+def handle_create_reply():
     """Flask route for creating a reply"""
     reply_options = request.json
     if reply_options is None:
         return 'Bad request', 400
-    reply = db.create_reply(engine, **reply_options)
+    reply = create_reply(engine, **reply_options)
     if reply is None:
         return 'Failed to create', 500
     return jsonify({ 'replyId': reply.reply_id }), 201
 
 @app.route('/reply/<reply_id>', methods=['POST'])
-def update_reply(reply_id):
+def handle_update_reply(reply_id):
     """Flask route for updating a reply"""
     reply_options = request.json
     if reply_options is None:
         return 'Bad request', 400
-    db.update_reply(engine, reply_id, **reply_options)
+    update_reply(engine, reply_id, **reply_options)
     return '', 200
 
 @app.route('/reply/<reply_id>', methods=['DELETE'])
-def delete_reply(reply_id):
+def handle_delete_reply(reply_id):
     """Flask route for deleting a reply"""
-    db.delete_reply(engine, reply_id)
+    delete_reply(engine, reply_id)
     return '', 204
 
 @app.route('/upvote', methods=['PUT'])
-def create_upvote():
+def handle_create_upvote():
     """Flask route for creating an upvote"""
     upvote_options = request.json
     if upvote_options is None:
         return 'Bad request', 400
-    upvote = db.create_upvote(engine, **upvote_options)
+    upvote = create_upvote(engine, **upvote_options)
     if upvote is None:
         return 'Failed to create', 500
     return jsonify({ 'upvoteId': upvote.upvote_id }), 201
 
 @app.route('/upvote', methods=['DELETE'])
-def delete_upvote():
+def handle_delete_upvote():
     """Flask route for deleting an upvote"""
-    db.delete_upvote(engine, upvote_id)
+    delete_upvote(engine, upvote_id)
     return '', 204
 
 @app.route('/preview', methods=['PUT'])
-def create_preview():
+def handle_create_preview():
     """Flask route for creating a preview"""
     preview_options = request.json
     if preview_options is None:
         return 'Bad request', 400
-    preview = db.create_preview(engine, **preview_options)
+    preview = create_preview(engine, **preview_options)
     if preview is None:
         return 'Failed to create', 500
     return jsonify({ 'previewId': preview.preview_id }), 201
 
 @app.route('/preview/<preview_id>', methods=['POST'])
-def update_preview(preview_id):
+def handle_update_preview(preview_id):
     """Flask route for updating a preview"""
     preview_options = request.json
     if preview_options is None:
         return 'Bad request', 400
-    db.update_preview(engine, preview_id, **preview_options)
+    update_preview(engine, preview_id, **preview_options)
     return '', 200
 
 @app.route('/preview/<preview_id>', methods=['DELETE'])
-def delete_preview(preview_id):
+def handle_delete_preview(preview_id):
     """Flask route for deleting a preview"""
-    db.delete_preview(engine, preview_id)
+    delete_preview(engine, preview_id)
     return '', 204
 
 @app.route('/tag', methods=['PUT'])
-def create_tag():
+def handle_create_tag():
     """Flask route for creating a tag"""
     tag_options = request.json
     if tag_options is None:
         return 'Bad request', 400
-    tag = db.create_tag(engine, **tag_options)
+    tag = create_tag(engine, **tag_options)
     if tag is None:
         return 'Failed to create', 500
     return jsonify({ 'tagId': tag.tag_id }), 201
 
-@app.route('/tag/<tag_id>', methods=['POST'])
-def update_tag(tag_id):
-    """Flask route for updating a tag"""
-    tag_options = request.json
-    if tag_options is None:
-        return 'Bad request', 400
-    db.update_tag(engine, tag_id, **tag_options)
-    return '', 200
-
 @app.route('/tag/<tag_id>', methods=['DELETE'])
-def delete_tag(tag_id):
+def handle_delete_tag(tag_id):
     """Flask route for deleting a tag"""
-    db.delete_tag(engine, tag_id)
+    delete_tag(engine, tag_id)
     return '', 204
 
 @app.route('/editor', methods=['PUT'])
-def create_editor():
+def handle_create_editor():
     """Flask route for creating an editor"""
     editor_options = request.json
     if editor_options is None:
         return 'Bad request', 400
-    editor = db.create_editor(engine, **editor_options)
+    editor = create_editor(engine, **editor_options)
     if editor is None:
         return 'Failed to create', 500
     return jsonify({ 'editorId': editor.editor_id }), 201
 
 @app.route('/editor/<editor_id>', methods=['POST'])
-def update_editor(editor_id):
+def handle_update_editor(editor_id):
     """Flask route for updating an editor"""
     editor_options = request.json
     if editor_options is None:
         return 'Bad request', 400
-    db.update_editor(engine, editor_id, **editor_options)
+    update_editor(engine, editor_id, **editor_options)
     return '', 200
 
 @app.route('/editor/<editor_id>', methods=['DELETE'])
-def delete_editor(editor_id):
+def handle_delete_editor(editor_id):
     """Flask route for deleting an editor"""
-    db.delete_editor(engine, editor_id)
+    delete_editor(engine, editor_id)
     return '', 204
 
 @app.route('/camera', methods=['PUT'])
-def create_camera():
+def handle_create_camera():
     """Flask route for creating a camera"""
     camera_options = request.json
     if camera_options is None:
         return 'Bad request', 400
-    camera = db.create_camera(engine, **camera_options)
+    camera = create_camera(engine, **camera_options)
     if camera is None:
         return 'Failed to create', 500
     return jsonify({ 'cameraId': camera.camera_id }), 201
 
 @app.route('/camera/<camera_id>', methods=['POST'])
-def update_camera(camera_id):
+def handle_update_camera(camera_id):
     """Flask route for updating a camera"""
     camera_options = request.json
     if camera_options is None:
         return 'Bad request', 400
-    db.update_camera(engine, camera_id, **camera_options)
+    update_camera(engine, camera_id, **camera_options)
     return '', 200
 
 @app.route('/camera/<camera_id>', methods=['DELETE'])
-def delete_camera(camera_id):
+def handle_delete_camera(camera_id):
     """Flask route for deleting a camera"""
-    db.delete_camera(engine, camera_id)
+    delete_camera(engine, camera_id)
     return '', 204
 
 @app.route('/lens', methods=['PUT'])
-def create_lens():
+def handle_create_lens():
     """Flask route for creating a lens"""
     lens_options = request.json
     if lens_options is None:
         return 'Bad request', 400
-    lens = db.create_lens(engine, **lens_options)
+    lens = create_lens(engine, **lens_options)
     if lens is None:
         return 'Failed to create', 500
     return jsonify({ 'lensId': lens.lens_id }), 201
 
 @app.route('/lens/<lens_id>', methods=['POST'])
-def update_lens(lens_id):
+def handle_update_lens(lens_id):
     """Flask route for updating a lens"""
     lens_options = request.json
     if lens_options is None:
         return 'Bad request', 400
-    db.update_lens(engine, lens_id, **lens_options)
+    update_lens(engine, lens_id, **lens_options)
     return '', 200
 
 @app.route('/lens/<lens_id>', methods=['DELETE'])
-def delete_lens(lens_id):
+def handle_delete_lens(lens_id):
     """Flask route for deleting a lens"""
-    db.delete_lens(engine, lens_id)
+    delete_lens(engine, lens_id)
     return '', 204
 
 @app.route('/manufacturer', methods=['PUT'])
-def create_manufacturer():
+def handle_create_manufacturer():
     """Flask route for creating a manufacturer"""
     manufacturer_options = request.json
     if manufacturer_options is None:
         return 'Bad request', 400
-    manufacturer = db.create_manufacturer(engine, **manufacturer_options)
+    manufacturer = create_manufacturer(engine, **manufacturer_options)
     if manufacturer is None:
         return 'Failed to create', 500
     return jsonify({ 'manufacturerId': manufacturer.manufacturer_id }), 201
 
 @app.route('/manufacturer/<manufacturer_id>', methods=['POST'])
-def update_manufacturer(manufacturer_id):
+def handle_update_manufacturer(manufacturer_id):
     """Flask route for updating a manufacturer"""
     manufacturer_options = request.json
     if manufacturer_options is None:
         return 'Bad request', 400
-    db.update_manufacturer(engine, manufacturer_id, **manufacturer_options)
+    update_manufacturer(engine, manufacturer_id, **manufacturer_options)
     return '', 200
 
 @app.route('/manufacturer/<manufacturer_id>', methods=['DELETE'])
-def delete_manufacturer(manufacturer_id):
+def handle_delete_manufacturer(manufacturer_id):
     """Flask route for deleting a manufacturer"""
-    db.delete_manufacturer(engine, manufacturer_id)
+    delete_manufacturer(engine, manufacturer_id)
     return '', 204
 
 @app.teardown_appcontext

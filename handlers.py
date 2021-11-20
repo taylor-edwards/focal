@@ -373,6 +373,53 @@ def delete_upvote(engine, upvote_id):
         session.delete(upvote)
         session.commit()
 
+def create_preview(
+    engine,
+    preview_file_path,
+    preview_file_size,
+    preview_width,
+    preview_height
+):
+    """Create a preview"""
+    # pylint: disable=too-many-arguments
+    with Session(engine) as session:
+        preview = Preview(
+            preview_file_path,
+            preview_file_size,
+            preview_width,
+            preview_height
+        )
+        session.add(preview)
+        session.commit()
+        session.refresh(preview)
+        return preview
+
+def update_preview(
+    engine,
+    preview_id,
+    **property_overrides
+):
+    """Update a preview"""
+    preview_property_list = [
+        'preview_file_path',
+        'preview_file_size',
+        'preview_width',
+        'preview_height'
+    ]
+    preview_updates = {k: v for k, v in property_overrides if k in preview_property_list}
+    with Session(engine) as session:
+        session.query(Preview).filter_by(preview_id=preview_id).update(preview_updates)
+        session.commit()
+
+def delete_preview(engine, preview_id):
+    """Delete a preview"""
+    with Session(engine) as session:
+        preview = select_preview(engine, preview_id=preview_id)
+        if preview is None:
+            raise Exception(f'Preview not found ({preview_id})')
+        session.delete(preview)
+        session.commit()
+
 def select_tag(engine, tag_id):
     """Select a tag"""
     with Session(engine) as session:

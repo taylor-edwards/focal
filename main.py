@@ -5,12 +5,10 @@ Create, update and delete data to test database integration.
 """
 
 import sys
-# from time import sleep
-# from db import Database
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from model import Base
-from db import (
+from handlers import (
     select_account,
     create_account,
     update_account,

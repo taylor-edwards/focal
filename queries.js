@@ -99,6 +99,6 @@ const deleteAccount = id => fetch(`http://localhost:5000/account/${id}`, {
   method: 'DELETE',
 })
 
-deleteAccount(118)
+deleteAccount(119)
 .finally(() => createAccount('winnie', 'winnie@focal.pics'))
-.finally(() => editAccount(119, { account_name: 'boobear', is_verified: true }))
+.finally(() => editAccount(120, { account_name: 'boobear', is_verified: true }))
