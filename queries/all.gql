@@ -1,10 +1,8 @@
 query QueryAll($accountId: ID!) {
   accounts {
-    accountId
     accountName
   }
   account(accountId: $accountId) {
-    accountId
     accountRole
     accountName
     accountEmail
@@ -16,6 +14,12 @@ query QueryAll($accountId: ID!) {
       bannedUntil
       banReason
       banText
+    }
+    blocked {
+      accountName
+    }
+    blockedBy {
+      accountName
     }
     notifications {
       notifyReason
@@ -145,7 +149,6 @@ query QueryAll($accountId: ID!) {
       previewFilePath
     }
     account {
-      accountId
       accountName
     }
   }
@@ -157,7 +160,6 @@ query QueryAll($accountId: ID!) {
       previewFilePath
     }
     account {
-      accountId
       accountName
     }
   }

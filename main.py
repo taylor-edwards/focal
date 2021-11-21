@@ -341,10 +341,10 @@ except Exception as err: # pylint: disable=broad-except
     print('Create manufacturer exception:', err)
 
 
-canon_manufacturer = select_manufacturer(engine, manufacturer_name='Canon')
-nikon_manufacturer = select_manufacturer(engine, manufacturer_name='Nikon')
-fujifilm_manufacturer = select_manufacturer(engine, manufacturer_name='Fujifilm')
-rokinon_manufacturer = select_manufacturer(engine, manufacturer_name='Rokinon')
+canon_mfr = select_manufacturer(engine, manufacturer_name='Canon')
+nikon_mfr = select_manufacturer(engine, manufacturer_name='Nikon')
+fujifilm_mfr = select_manufacturer(engine, manufacturer_name='Fujifilm')
+rokinon_mfr = select_manufacturer(engine, manufacturer_name='Rokinon')
 
 # Create some cameras
 try:
@@ -353,9 +353,9 @@ try:
         manufacturer_id=manufacturer_id,
         camera_model=camera_model
     ) for (manufacturer_id, camera_model) in [
-        (canon_manufacturer.manufacturer_id, 'Rebel T5i'),
-        (nikon_manufacturer.manufacturer_id, 'D850'),
-        (fujifilm_manufacturer.manufacturer_id, 'XT-3')
+        (canon_mfr.manufacturer_id, 'Rebel T5i'),
+        (nikon_mfr.manufacturer_id, 'D850'),
+        (fujifilm_mfr.manufacturer_id, 'XT-3')
     ]]
 except Exception as err: # pylint: disable=broad-except
     print('Create camera exception:', err)
@@ -365,8 +365,8 @@ except Exception as err: # pylint: disable=broad-except
 try:
     lenses = [
         create_lens(engine, manufacturer_id, lens_model) for (manufacturer_id, lens_model) in [
-        (rokinon_manufacturer.manufacturer_id, 'FE75MFT-B'),
-        (canon_manufacturer.manufacturer_id, 'EF 17-40mm f/4L')
+        (rokinon_mfr.manufacturer_id, 'FE75MFT-B'),
+        (canon_mfr.manufacturer_id, 'EF 17-40mm f/4L')
     ]]
 except Exception as err: # pylint: disable=broad-except
     print('Create lens exception:', err)

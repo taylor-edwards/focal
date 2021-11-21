@@ -102,11 +102,18 @@ class Notification(Base):
     created_edit = relationship('Edit', foreign_keys=created_edit_id)
     created_reply = relationship('Reply', foreign_keys=created_reply_id)
 
-Follow = Table(
-    'follow',
+AccountFollow = Table(
+    'account_follow',
     Base.metadata,
     Column('follower_id', ForeignKey('account.account_id'), primary_key=True),
     Column('following_id', ForeignKey('account.account_id'), primary_key=True)
+)
+
+AccountBlock = Table(
+    'account_block',
+    Base.metadata,
+    Column('blocker_id', ForeignKey('account.account_id'), primary_key=True),
+    Column('blocked_id', ForeignKey('account.account_id'), primary_key=True)
 )
 
 AccountBan = Table(
@@ -136,13 +143,14 @@ class Account(Base):
     edits = relationship('Edit', back_populates='account', cascade='all, delete')
     replies = relationship('Reply', back_populates='account', cascade='all, delete')
     upvotes = relationship('Upvote', back_populates='account', cascade='all, delete')
+    # preview = relationship('Preview', uselist=False)
     following = relationship(
         'Account',
-        secondary=Follow,
-        primaryjoin=account_id == Follow.c.following_id,
-        secondaryjoin=account_id == Follow.c.follower_id,
+        secondary=AccountFollow,
+        primaryjoin=account_id == AccountFollow.c.following_id,
+        secondaryjoin=account_id == AccountFollow.c.follower_id,
         backref='followers',
-        cascade='all, delete',
+        cascade='all, delete'
     )
     notifications = relationship(
         'Notification',
@@ -150,8 +158,20 @@ class Account(Base):
         back_populates='recipient',
         cascade='all, delete'
     )
-    # preview = relationship('Preview', uselist=False)
-    bans = relationship('Ban', secondary=AccountBan, back_populates='accounts')
+    blocked = relationship(
+        'Account',
+        secondary=AccountBlock,
+        primaryjoin=account_id == AccountBlock.c.blocked_id,
+        secondaryjoin=account_id == AccountBlock.c.blocker_id,
+        backref='blocked_by',
+        cascade='all, delete'
+    )
+    bans = relationship(
+        'Ban',
+        secondary=AccountBan,
+        back_populates='accounts',
+        cascade='all, delete'
+    )
 
 class Ban(Base):
     """Ban table"""

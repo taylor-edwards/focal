@@ -4,11 +4,11 @@ CREATE DATABASE focal;
 GRANT CONNECT ON DATABASE focal TO focal;
 
 -- Destroy all tables and rows:
-TRUNCATE account, ban, account_ban, follow, manufacturer, camera, lens, editor, preview,
-photo, edit, reply, tag, photo_tag, upvote, notification, flag RESTART IDENTITY CASCADE;
-DROP TABLE account, ban, account_ban, follow, manufacturer, camera, lens, editor, preview,
+TRUNCATE account, ban, account_ban, account_block, account_follow, manufacturer, camera, lens, editor,
+preview, photo, edit, reply, tag, photo_tag, upvote, notification, flag RESTART IDENTITY CASCADE;
+DROP TABLE account, ban, account_ban, account_block, account_follow, manufacturer, camera, lens, editor, preview,
 photo, edit, reply, tag, photo_tag, upvote, notification, flag CASCADE;
-DROP TYPE account_role, misbehavior, platform, notify_reason, read_status;
+DROP TYPE account_role, misbehavior, platform, notify_reason, read_status CASCADE;
 
 CREATE TYPE account_role AS ENUM ('admin', 'user');
 
@@ -43,11 +43,17 @@ CREATE TABLE IF NOT EXISTS account (
 -- Users that are not logged in or do not follow anyone will be shown the global feed.
 -- Followers and following lists are private. Only logged in users can see which accounts
 -- they follow. Follower lists are not shown to anyone, but follower count is.
-CREATE TABLE IF NOT EXISTS follow (
+CREATE TABLE IF NOT EXISTS account_follow (
     follower_id  INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     following_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
     PRIMARY KEY (follower_id, following_id)
 );
+
+CREATE TABLE IF NOT EXISTS account_block {
+    blocker_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
+    blocked_id INTEGER NOT NULL REFERENCES account ON UPDATE CASCADE ON DELETE CASCADE,
+    PRIMARY KEY (blocker_id, blocked_id)
+};
 
 -- Manufacturers of camera and lens equipment.
 CREATE TABLE IF NOT EXISTS manufacturer (
@@ -271,7 +277,7 @@ CREATE TABLE IF NOT EXISTS ban (
 --     -- add photos to feed for account_id=102
 --     INSERT INTO feed (account_id, photo_id)
 --     SELECT 102, photo_id FROM photo WHERE account_id IN (
---         SELECT following_id FROM follow
+--         SELECT following_id FROM account_follow
 --         WHERE follower_id = 102
 --     )
 --     ORDER BY created_at DESC
@@ -280,7 +286,7 @@ CREATE TABLE IF NOT EXISTS ban (
 --     -- add edits to feed for account_id=102
 --     INSERT INTO FEED (account_id, edit_id)
 --     SELECT 102, edit_id FROM edit WHERE account_id IN (
---         SELECT following_id FROM follow
+--         SELECT following_id FROM account_follow
 --         WHERE follower_id = 102
 --     )
 --     ORDER BY created_at DESC
