@@ -75,6 +75,10 @@ class Notification(Base):
         Integer,
         ForeignKey('edit.edit_id', onupdate='CASCADE', ondelete='CASCADE')
     )
+    target_reply_id = Column(
+        Integer,
+        ForeignKey('reply.reply_id', onupdate='CASCADE', ondelete='CASCADE')
+    )
     created_edit_id = Column(
         Integer,
         ForeignKey('edit.edit_id', onupdate='CASCADE', ondelete='CASCADE')
@@ -99,6 +103,7 @@ class Notification(Base):
     actor = relationship('Account', foreign_keys=actor_id)
     target_photo = relationship('Photo', foreign_keys=target_photo_id)
     target_edit = relationship('Edit', foreign_keys=target_edit_id)
+    target_reply = relationship('Reply', foreign_keys=target_reply_id)
     created_edit = relationship('Edit', foreign_keys=created_edit_id)
     created_reply = relationship('Reply', foreign_keys=created_reply_id)
 

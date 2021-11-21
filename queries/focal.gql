@@ -1,0 +1,242 @@
+query QueryAll($accountId: ID!) {
+  accounts {
+    accountName
+  }
+  account(accountId: $accountId) {
+    accountRole
+    accountName
+    accountEmail
+    createdAt
+    verifiedAt
+    editedAt
+    bans {
+      id: banId
+      at: bannedAt
+      until: bannedUntil
+      reason: banReason
+      text: banText
+    }
+    blocked {
+      name: accountName
+    }
+    blockedBy {
+      name: accountName
+    }
+    notifications {
+      reason: notifyReason
+      actor {
+        name: accountName
+      }
+      createdEditId
+      createdReplyId
+      photo: targetPhoto {
+        id: photoId
+        title: photoTitle
+        preview {
+          id: previewId
+          filePath: previewFilePath
+        }
+        account {
+          name: accountName
+        }
+      }
+      edit: targetEdit {
+        id: editId
+        title: editTitle
+        preview {
+          id: previewId
+          filePath: previewFilePath
+        }
+        account {
+          name: accountName
+        }
+      }
+      reply: targetReply {
+        id: replyId
+        text: replyText
+      }
+    }
+    photos {
+      id: photoId
+      title: photoTitle
+      description: photoDescription
+      rawWidth
+      rawHeight
+      aperture
+      focalLength
+      iso
+      shutterSpeedDenominator
+      shutterSpeedNumerator
+      camera {
+        id: cameraId
+        model: cameraModel
+        manufacturer {
+          id: manufacturerId
+          name: manufacturerName
+        }
+      }
+      lens {
+        id: lensId
+        model: lensModel
+        manufacturer {
+          id: manufacturerId
+          name: manufacturerName
+        }
+      }
+      preview {
+        id: previewId
+        filePath: previewFilePath
+      }
+      replies {
+        id: replyId
+        text: replyText
+        createdAt
+      }
+      edits {
+        id: editId
+        title: editTitle
+        description: editDescription
+        filePath: editFilePath
+        extension: editFileExtension
+        size: editFileSize
+        width: editWidth
+        height: editHeight
+        createdAt
+        editedAt
+        editor {
+          id: editorId
+          name: editorName
+          version: editorVersion
+          platform: editorPlatform
+        }
+      }
+      upvotes {
+        upvoteId
+        account {
+          name: accountName
+        }
+      }
+      tags {
+        tagId
+        tagName
+      }
+    }
+    edits {
+      editId
+      editTitle
+      editDescription
+      editFilePath
+      editFileExtension
+      editFileSize
+      editWidth
+      editHeight
+      createdAt
+      editedAt
+      editor {
+        editorId
+        editorName
+        editorVersion
+        editorPlatform
+      }
+      photo {
+        photoId
+        photoTitle
+        photoDescription
+        preview {
+          previewId
+          previewFilePath
+        }
+      }
+    }
+    upvotes {
+      id: upvoteId
+      photo {
+        id: photoId
+        title: photoTitle
+        preview {
+          filePath: previewFilePath
+        }
+        account {
+          name: accountName
+        }
+      }
+      edit {
+        id: editId
+        title: editTitle
+        description: editDescription
+        preview {
+          id: previewId
+          filePath: previewFilePath
+        }
+        account {
+          name: accountName
+        }
+      }
+      reply {
+        id: replyId
+        text: replyText
+        account {
+          name: accountName
+        }
+      }
+    }
+  }
+  tags {
+    tagId
+    tagName
+  }
+  cameras {
+    id: cameraId
+    model: cameraModel
+    manufacturer {
+      id: manufacturerId
+      name: manufacturerName
+    }
+  }
+  lenses {
+    id: lensId
+    model: lensModel
+    apertureMin
+    apertureMax
+    focalLengthMin
+    focalLengthMax
+    manufacturer {
+      id: manufacturerId
+      name: manufacturerName
+    }
+  }
+  manufacturers {
+    id: manufacturerId
+    name: manufacturerName
+    cameras {
+      id: cameraId
+      model: cameraModel
+    }
+    lenses {
+      id: lensId
+      model: lensModel
+    }
+  }
+  photos {
+    id: photoId
+    title: photoTitle
+    preview {
+      id: previewId
+      filePath: previewFilePath
+    }
+    account {
+      name: accountName
+    }
+  }
+  edits {
+    id: editId
+    title: editTitle
+    preview {
+      id: previewId
+      filePath: previewFilePath
+    }
+    account {
+      name: accountName
+    }
+  }
+}
