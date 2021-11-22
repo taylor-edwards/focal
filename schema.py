@@ -252,6 +252,12 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Preview.get_query(info=info).filter(PreviewModel.preview_id == preview_id).first()
 
+    previews = List(Preview)
+    def resolve_previews(self, info):
+        """Query for all previews"""
+         # pylint: disable=no-self-use
+        return Preview.get_query(info=info).all()
+
     reply = Field(Reply, reply_id=Argument(type=ID, required=True))
     def resolve_reply(self, info, reply_id=None):
         """Query for reply by ID"""

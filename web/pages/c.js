@@ -3,22 +3,34 @@
  */
 
 import { useState } from 'react'
-import { PAGE_REVALIDATION_INTERVAL } from 'constants'
+import { useRouter } from 'next/router'
+import { PAGE_REVALIDATION_INTERVAL } from 'config'
+import { submitPhoto, submitEdit } from 'api'
+import Button from 'components/Button'
+import PhotoForm from 'components/PhotoForm'
+import EditForm from 'components/EditForm'
 
 const noop = () => {}
 
 export const getStaticProps = async context => {
   try {
     const { fetchManufacturers } = require('queries')
-    const response = await fetchManufacturers()
-    const json = await response.json()
-    console.log(json)
+    const { fetchFileSupport } = require('api')
+    const mfrs = await fetchManufacturers()
+      .then(r => r.json())
+      .catch(err => console.error(err))
+    const fileSupport = await fetchFileSupport()
+      .then(r => r.json())
+      .catch(err => console.error(err))
     return {
-      props: json.data,
+      props: {
+        manufacturers: mfrs.data.manufacturers,
+        fileSupport: fileSupport,
+      },
       revalidate: PAGE_REVALIDATION_INTERVAL,
     }
   } catch (err) {
-    console.warn('Caught error fetching equipment:', err)
+    console.warn('Caught error fetching manufacturers:', err)
   }
   return {
     notFound: true,
@@ -26,172 +38,145 @@ export const getStaticProps = async context => {
   }
 }
 
-const PhotoForm = ({ className, photo = {}, setter = noop, manufacturers }) => {
-  const [cameraMFId, setCameraMFId] = useState(null)
-  const [lensMFId, setLensMFId] = useState(null)
-  return (
-    <form className={className}>
-      <h1>Submit Photo</h1>
-      <label>
-        <p>Title</p>
-        <input
-          type="text"
-          name="title"
-          value={photo.photo_title}
-          onInput={e => setter({ photo_title: e.currentTarget.value })}
-        />
-      </label>
-      <label>
-        <p>Description</p>
-        <input type="text" name="description" />
-      </label>
-      <label>
-        <p>Upload raw file</p>
-        <input type="file" name="raw-file" />
-      </label>
-      <label>
-        <p>Upload preview image</p>
-        <input type="file" name="preview-file" />
-      </label>
-
-      <label>
-        <p>Camera manufacturer</p>
-        <select onChange={e => setCameraMFId(e.currentTarget.value)}>
-          {manufacturers.map(({ id, name }) => (
-            <option key={id} value={id}>{name}</option>
-          ))}
-        </select>
-      </label>
-      <label>
-        <p>Camera model</p>
-        <select>
-          <option value={null}>---</option>
-          {manufacturers.filter(({ id }) => id === cameraMFId).map(
-            ({ cameras }) => cameras.map(
-              ({ id, model }) => <option key={id} value={id}>{model}</option>
-            )
-          )}
-        </select>
-      </label>
-
-      <label>
-        <p>Lens manufacturer</p>
-        <select onChange={e => setLensMFId(e.currentTarget.value)}>
-          <option value={null}>---</option>
-          {manufacturers.map(
-            ({ id, name }) => <option key={id} value={id}>{name}</option>
-          )}
-        </select>
-      </label>
-      <label>
-        <p>Lens model</p>
-        <select>
-          <option value={null}>---</option>
-          {manufacturers.filter(({ id }) => id === lensMFId).map(
-            ({ lenses }) => lenses.map(
-              ({ id, model }) => <option key={id} value={id}>{model}</option>
-            )
-          )}
-        </select>
-      </label>
-    </form>
-  )
-}
-
-const EditForm = ({ className, edit = {}, setter = noop }) => (
-  <form className={className}>
-    <h1>Submit Edit</h1>
-    <label>
-      <p>Title</p>
-      <input type="text" name="title" />
-    </label>
-    <label>
-      <p>Description</p>
-      <input type="text" name="description" />
-    </label>
-    <label>
-      <p>Upload raw file</p>
-      <input type="file" name="raw-file" />
-    </label>
-    <label>
-      <p>Upload preview image</p>
-      <input type="file" name="preview-file" />
-    </label>
-  </form>
-)
-
-const createPreview = () => ({
-  preview_file_path: null,
-  preview_file_size: null,
-  preview_width: null,
-  preview_height: null,
+const cameraFormState = () => ({
+  camera_id: null,
+  camera_model: '',
+  camera_manufacturer_id: null,
+  camera_manufacturer_name: '',
 })
 
-const createPhoto = () => ({
-  photo_title: '',
-  preview: null,
-  camera_id: null,
+const lensFormState = () => ({
   lens_id: null,
-  photo_description: null,
-  raw_file_path: null,
-  raw_file_extension: null,
-  raw_file_size: null,
-  raw_width: null,
-  raw_height: null,
+  lens_model: '',
+  lens_aperture_min: null,
+  lens_aperture_max: null,
+  lens_focal_length_min: null,
+  lens_focal_length_max: null,
+  lens_manufacturer_id: null,
+  lens_manufacturer_name: '',
+})
+
+const photoFormState = (account_name) => ({
+  account_name,
+  photo_title: '',
+  photo_description: '',
+  raw_file: null,
+  preview_file: null,
   aperture: null,
   flash: null,
   focal_length: null,
   iso: null,
   shutter_speed_denominator: null,
   shutter_speed_numerator: null,
+  ...cameraFormState(),
+  ...lensFormState(),
 })
 
-const createEdit = () => ({
-  temp_id: Math.random().toString().substr(2),
+const editFormState = (account_name, photo_id = null) => ({
+  account_name,
+  photo_id,
+  temp_id: Math.random().toString(16).substr(2),
   edit_title: '',
-  preview_id: null,
-  photo_id: null,
+  edit_description: '',
+  edit_file: null,
+  preview_file: null,
   editor_id: null,
-  edit_description: null,
-  edit_file_path: null,
-  edit_file_extension: null,
-  edit_file_size: null,
-  edit_width: null,
-  edit_height: null,
+  editor_name: '',
+  editor_version: '',
+  editor_platform: '',
 })
 
-const CreatePhoto = ({ manufacturers }) => {
-  const [photo, setPhoto] = useState(createPhoto())
+const photoFormIsComplete = photo =>
+  // input is not nullish
+  photo &&
+  // must have title or description
+  (photo.photo_title?.length > 0 || photo.photo_description?.length > 0) &&
+  // must include at least one file
+  photo.preview_file != photo.raw_file
+
+const editFormIsComplete = edit =>
+  // input is not nullish
+  edit &&
+  // must have title or description
+  (edit.edit_title?.length > 0 || edit.edit_description?.length > 0) &&
+  // must include at least one file
+  edit.preview_file != edit.edit_file
+
+const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
+  const accountName = 'nacho'
+  const router = useRouter()
+  const [photo, setPhoto] = useState(photoFormState(accountName))
   const [edits, setEdits] = useState([])
-  const setEditForm = index => edit => setEdits(
-    edits.slice(0, index).concat({
-      ...edits[index],
-      ...edit,
-    }).concat(edits.slice(index + 1))
+
+  const addEdit = () => {
+    setEdits(e => e.concat(editFormState(accountName)))
+  }
+
+  const deleteEdit = index =>
+    setEdits(e => e.slice(0, index).concat(e.slice(index + 1)))
+
+  const setEdit = index => fields => setEdits(
+    e => e.slice(0, index).concat({
+      ...e[index],
+      ...fields,
+    }).concat(e.slice(index + 1))
   )
-  console.log(JSON.stringify(photo, null, 4))
-  console.log(JSON.stringify(edits, null, 4))
+
+  const onSubmit = e => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!photoFormIsComplete(photo)) {
+      console.log('Photo form is incomplete!', photo, edits)
+      return
+    }
+    const editFormsComplete = edits.reduce(
+      (truthy, edit) => truthy ? editFormIsComplete(edit) : false,
+      true,
+    )
+    if (!editFormsComplete) {
+      console.log('Edit form is incomplete!', photo, edits)
+      return
+    }
+    submitPhoto(photo)
+      .then(response => response.json())
+      .then(async ({ photoId }) => {
+        if (photoId) {
+          await Promise.all(edits.map(
+            edit => submitEdit({ photoId, ...edit }).then(noop, noop)
+          ))
+        }
+        router.push(`/a/${accountName}/p/${photoId}`)
+      })
+      .catch(err => {
+        console.warn('Caught error while submitting photo', err)
+      })
+  }
+
   return (
-    <div>
+    <main>
       <PhotoForm
         photo={photo}
-        setPhoto={form => ({ ...photo, ...form })}
+        setter={fields => setPhoto(p => ({ ...p, ...fields }))}
         manufacturers={manufacturers}
+        onSubmit={onSubmit}
+        fileSupport={fileSupport}
       />
-      <ul>
+      <ul className="flex-row">
         {edits.map((edit, index) => (
           <li key={edit.temp_id}>
-            <button onClick={() => setEdits(
-              edits.slice(0, index).concat(edits.slice(index + 1)),
-            )}>&times; Delete edit</button>
-            <EditForm edit={edit} setter={setEditForm(index)} />
+            <Button onClick={() => deleteEdit(index)}>&times; Delete edit</Button>
+            <EditForm
+              edit={edit}
+              setter={setEdit(index)}
+              fileSupport={fileSupport}
+            />
           </li>
         ))}
       </ul>
-      <button onClick={() => setEdits(edits.concat(createEdit()))}>
+      <Button onClick={addEdit}>
         + Add edit
-      </button>
-    </div>
+      </Button>
+    </main>
   )
 }
 

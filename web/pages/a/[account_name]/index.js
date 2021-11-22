@@ -3,7 +3,6 @@
  */
 
 import { useRouter } from 'next/router'
-import { PAGE_REVALIDATION_INTERVAL } from 'constants'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
@@ -14,6 +13,7 @@ export const getStaticProps = async context => {
     //
     //     const { fetchPrivateAccount } = require('queries')
     const { fetchPublicAccount } = require('queries')
+    const { PAGE_REVALIDATION_INTERVAL } = require('config')
     const accountName = context.params?.account_name
     const response = await fetchPublicAccount({ accountName })
     const json = await response.json()
@@ -22,17 +22,18 @@ export const getStaticProps = async context => {
       revalidate: PAGE_REVALIDATION_INTERVAL,
     }
   } catch (err) {
-    console.warn('Caught error fetching private account:', err)
+    console.warn('Caught error fetching public account:', err)
   }
   return {
     notFound: true,
-    revalidate: PAGE_REVALIDATION_INTERVAL,
+    revalidate: 60,
   }
 }
 
 export const getStaticPaths = async () => {
   try {
     const { fetchAccounts } = require('queries')
+    const { PAGE_REVALIDATION_INTERVAL } = require('config')
     const response = await fetchAccounts()
     const json = await response.json()
     const paths = json.data.accounts.map(
@@ -48,7 +49,6 @@ export const getStaticPaths = async () => {
   return {
     paths: [],
     fallback: true,
-    revalidate: PAGE_REVALIDATION_INTERVAL,
   }
 }
 

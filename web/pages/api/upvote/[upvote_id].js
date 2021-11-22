@@ -1,4 +1,4 @@
-import { FLASK_ENDPOINT } from 'constants'
+import { FLASK_ENDPOINT } from 'config'
 
 export default function handler(req, res) {
   if (req.method !== 'DELETE') {

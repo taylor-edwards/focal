@@ -10,6 +10,7 @@ from model import (
     Lens,
     Manufacturer,
     Photo,
+    Preview,
     Reply,
     Tag,
     Upvote
@@ -118,6 +119,7 @@ def create_photo(
     camera_id=None,
     lens_id=None,
     photo_description=None,
+    raw_file_name=None,
     raw_file_path=None,
     raw_file_extension=None,
     raw_file_size=None,
@@ -143,6 +145,7 @@ def create_photo(
             camera_id=camera_id,
             lens_id=lens_id,
             photo_description=photo_description,
+            raw_file_name=raw_file_name,
             raw_file_path=raw_file_path,
             raw_file_extension=raw_file_extension,
             raw_file_size=raw_file_size,
@@ -324,9 +327,8 @@ def update_reply(engine, reply_id, **property_overrides):
     with Session(engine) as session:
         reply_property_list = ['reply_text']
         reply_updates = {k: v for k, v in property_overrides if k in reply_property_list}
-        with Session(engine) as session:
-            session.query(Reply).filter_by(reply_id=reply_id).update(reply_updates)
-            session.commit()
+        session.query(Reply).filter_by(reply_id=reply_id).update(reply_updates)
+        session.commit()
 
 def delete_reply(engine, reply_id):
     """Delete a reply"""
@@ -384,10 +386,10 @@ def create_preview(
     # pylint: disable=too-many-arguments
     with Session(engine) as session:
         preview = Preview(
-            preview_file_path,
-            preview_file_size,
-            preview_width,
-            preview_height
+            preview_file_path=preview_file_path,
+            preview_file_size=preview_file_size,
+            preview_width=preview_width,
+            preview_height=preview_height
         )
         session.add(preview)
         session.commit()
@@ -474,9 +476,8 @@ def update_editor(engine, editor_id, **property_overrides):
             'editor_platform'
         ]
         editor_updates = {k: v for k, v in property_overrides if k in editor_property_list}
-        with Session(engine) as session:
-            session.query(Editor).filter_by(editor_id=editor_id).update(editor_updates)
-            session.commit()
+        session.query(Editor).filter_by(editor_id=editor_id).update(editor_updates)
+        session.commit()
 
 def delete_editor(engine, editor_id):
     """Delete an editor"""
@@ -511,9 +512,8 @@ def update_camera(engine, camera_id, **property_overrides):
     with Session(engine) as session:
         camera_property_list = ['manufacturer_id', 'camera_model']
         camera_updates = {k: v for k, v in property_overrides if k in camera_property_list}
-        with Session(engine) as session:
-            session.query(Camera).filter_by(camera_id=camera_id).update(camera_updates)
-            session.commit()
+        session.query(Camera).filter_by(camera_id=camera_id).update(camera_updates)
+        session.commit()
 
 def delete_camera(engine, camera_id):
     """Delete a camera"""
@@ -568,9 +568,8 @@ def update_lens(engine, lens_id, **property_overrides):
             'focal_length_max'
         ]
         lens_updates = {k: v for k, v in property_overrides if k in lens_property_list}
-        with Session(engine) as session:
-            session.query(Lens).filter_by(lens_id=lens_id).update(lens_updates)
-            session.commit()
+        session.query(Lens).filter_by(lens_id=lens_id).update(lens_updates)
+        session.commit()
 
 def delete_lens(engine, lens_id):
     """Delete a lens"""
@@ -610,11 +609,10 @@ def update_manufacturer(engine, manufacturer_id, **property_overrides):
         manufacturer_updates = {
             k: v for k, v in property_overrides if k in manufacturer_property_list
         }
-        with Session(engine) as session:
-            session.query(Manufacturer) \
-                   .filter_by(manufacturer_id=manufacturer_id) \
-                   .update(manufacturer_updates)
-            session.commit()
+        session.query(Manufacturer) \
+               .filter_by(manufacturer_id=manufacturer_id) \
+               .update(manufacturer_updates)
+        session.commit()
 
 def delete_manufacturer(engine, manufacturer_id):
     """Delete a manufacturer"""

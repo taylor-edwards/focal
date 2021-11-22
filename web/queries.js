@@ -1,6 +1,6 @@
-import { FLASK_ENDPOINT } from './constants'
+import { FLASK_ENDPOINT } from 'config'
 
-export const fetchQuery = (name, query, variables={}) => {
+export const fetchQuery = (name, query, variables = {}) => {
   const controller = new AbortController()
   const timer = setTimeout(
     () => controller.abort(),
@@ -25,7 +25,14 @@ export const fetchQuery = (name, query, variables={}) => {
   })
 }
 
-const photosMiniFeed = `
+const previewFragment = `
+  preview {
+    filePath: previewFilePath
+    width: previewWidth
+    height: previewHeight
+  }`
+
+const photosFeedFragment = `
   photos {
     id: photoId
     title: photoTitle
@@ -33,23 +40,24 @@ const photosMiniFeed = `
     account {
       name: accountName
     }
-    preview {
-      filePath: previewFilePath
-    }
+    ${previewFragment}
   }
 `
 
-const editsMiniFeed = `
+const editsFragment = `
   edits {
     id: editId
     title: editTitle
+    filePath: editFilePath
+    fileExtension: editFileExtension
+    fileSize: editFileSize
+    width: editWidth
+    height: editHeight
     createdAt
     account {
       name: accountName
     }
-    preview {
-      filePath: previewFilePath
-    }
+    ${previewFragment}
   }
 `
 
@@ -62,21 +70,21 @@ export const fetchAccounts = () => fetchQuery(
   }`
 )
 
-export const fetchPublicAccount = vars => fetchQuery(
+export const fetchPublicAccount = ({ accountId, accountName }) => fetchQuery(
   'PublicAccount',
   `query PublicAccount($accountId: ID, $accountName: String) {
     account(accountId: $accountId, accountName: $accountName) {
       name: accountName
       createdAt
       editedAt
-      ${photosMiniFeed}
-      ${editsMiniFeed}
+      ${photosFeedFragment}
+      ${editsFragment}
     }
   }`,
-  vars,
+  { accountId, accountName },
 )
 
-export const fetchPrivateAccount = vars => fetchQuery(
+export const fetchPrivateAccount = ({ accountId, accountName }) => fetchQuery(
   'PrivateAccount',
   `query PrivateAccount($accountId: ID, $accountName: String) {
     account(accountId: $accountId, accountName: $accountName) {
@@ -85,8 +93,8 @@ export const fetchPrivateAccount = vars => fetchQuery(
       createdAt
       verifiedAt
       editedAt
-      ${photosMiniFeed}
-      ${editsMiniFeed}
+      ${photosFeedFragment}
+      ${editsFragment}
       bans {
         at: bannedAt
         until: bannedUntil
@@ -101,21 +109,17 @@ export const fetchPrivateAccount = vars => fetchQuery(
         photo: targetPhoto {
           id: photoId
           title: photoTitle
-          preview {
-            filePath: previewFilePath
-          }
+          ${previewFragment}
         }
         edit: targetEdit {
           id: editId
           title: editTitle
-          preview {
-            filePath: previewFilePath
-          }
+          ${previewFragment}
         }
       }
     }
   }`,
-  vars,
+  { accountId, accountName },
 )
 
 export const fetchManufacturers = () => fetchQuery(
@@ -134,4 +138,64 @@ export const fetchManufacturers = () => fetchQuery(
       }
     }
   }`
+)
+
+export const fetchPhoto = photoId => fetchQuery(
+  'Photo',
+  `query Photo($photoId: ID!) {
+    photo(photoId: $photoId) {
+      id: photoId
+      title: photoTitle
+      description: photoDescription
+      rawFilePath
+      rawFileSize
+      rawFileName
+      rawFileExtension
+      aperture
+      focalLength
+      iso
+      shutterSpeedDenominator
+      shutterSpeedNumerator
+      camera {
+        id: cameraId
+        model: cameraModel
+        manufacturer {
+          id: manufacturerId
+          name: manufacturerName
+        }
+      }
+      lens {
+        id: lensId
+        model: lensModel
+        manufacturer {
+          id: manufacturerId
+          name: manufacturerName
+        }
+      }
+    }
+  }`,
+  { photoId },
+)
+
+export const fetchEdit = editId => fetchQuery(
+  'Edit',
+  `query Edit($editId: ID!) {
+    id: editId
+    title: editTitle
+    description: editDescription
+    filePath: editFilePath
+    fileExtension: editFileExtension
+    fileSize: editFileSize
+    width: editWidth
+    height: editHeight
+    createdAt
+    editedAt
+    editor {
+      id: editorId
+      name: editorName
+      version: editorVersion
+      platform: editorPlatform
+    }
+  }`,
+  { editId },
 )

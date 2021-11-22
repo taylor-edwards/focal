@@ -1,6 +1,8 @@
 query QueryAll($accountId: ID!) {
   accounts {
+    accountId
     accountName
+    accountEmail
   }
   account(accountId: $accountId) {
     accountRole
@@ -220,6 +222,8 @@ query QueryAll($accountId: ID!) {
   photos {
     id: photoId
     title: photoTitle
+    rawFilePath
+    rawFileSize
     preview {
       id: previewId
       filePath: previewFilePath

@@ -1,0 +1,145 @@
+{
+    "upload_directory": "uploads",
+    "upload_paths": ["raw_file", "edit_file", "preview_file"],
+    "preview_image_format": "jpg",
+    "preview_image_size": [2000, 2000],
+    "supported_file_extensions": {
+        "raw_file": [
+            "3fr",     // Hasselblad 3F RAW image
+            "3pr",     // Hasselblad Camera RAW file format
+            "apu",     // Canon G3 corrupted RAW image
+            "ari",     // ARRIRAW file
+            "arw",     // Sony Digital Camera RAW digital image
+            "bay",     // Casio RAW picture image
+            "cap",     // Phase One RAW image
+            "ce1",     // Computer Eyes Raw image format
+            "ce2",     // Computer Eyes Raw image format
+            "cib",     // Compressed RAW image
+            "cmt",     // Chinon ES-1000 digital camera image format
+            "cr2",     // Canon digital camera RAW image format version 2.0
+            "craw",    // Sony RAW image
+            "crw",     // Canon digital camera RAW image format
+            "czi",     // Zeiss CZI microscope image
+            "dc2",     // Kodak DC25 Digital Camera RAW image
+            "dcr",     // Kodak Digital Camera Raw Image Format
+            "dcs",     // Kodak RAW image
+            "dng",     // Adobe Digital Negative
+            "drf",
+            "eip",     // Capture One Enhanced Image Package file
+            "eps",
+            "erf",     // Epson camera RAW file
+            "exf",     // Exchangeable Image File Format
+            "fff",     // Hasselblad Camera RAW file format
+            "fpx",     // Kodak FlashPiX bitmap image
+            "gray",    // RAW gray samples bitmap image
+            "grey",    // Raw image format
+            "gry",     // Raw image (Raw GREY)
+            "ia",      // Rollei RAW image
+            "iiq",     // Phase One RAW image
+            "k25",
+            "kc2",     // Kodak RAW image
+            "kdc",     // Kodak DC120 digital camera RAW image
+            "kqp",     // Konica camera photo impage
+            "lfp",     // Lytro Lightfield camera RAW image
+            "lfr",     // Lytro Illum digital photo
+            "m02",     // Magic Lantern RAW video
+            "m03",     // Magic Lantern RAW video
+            "mdc",     // Minolta RD175 image
+            "mef",     // Mamiya ZD MEF digital raw photograph
+            "mfw",     // Mamiya camera RAW image
+            "mos",     // Mamiya Digital Camera RAW image
+            "mrw",     // Minolta Dimage RAW image
+            "ndd",     // Nikon Capture Digital DEE data
+            "nef",     // Nikon Digital SLR camera RAW image
+            "nop",     // Nokia Smart Shoot RAW photo
+            "nrw",     // Nikon RAW image
+            "nwb",     // Nikon Capture white balance
+            "obm",
+            "olr",     // Openlab RAW image
+            "orf",     // Olympus Digital camera raw image
+            "pcd",     // Kodak Picture CD multiresolution image
+            "pef",     // Pentax Digital Camera Raw Image Format
+            "ptx",     // Pentax RAW bitmap graphic file
+            "pxn",
+            "r3d",     // REDCODE multimedia data
+            "ra2",     // Flare RAW data
+            "raf",     // Fuji CCD-RAW graphic image
+            "raw",     // Digital camera photo RAW image format
+            "rw2",     // Panasonic Lumix RAW image
+            "rwl",     // Leica D-Lux 4 RAW image
+            "rwz",     // Rawzor compressed RAW image
+            "sd0",     // Dali Raw image
+            "sd1",     // Dali Raw image
+            "sr2",     // Sony digital camera RAW image
+            "srf",     // Sony digital camera RAW image file
+            "srw",     // Samsung Raw picture image
+            "st4",     // SBIG CCD Camera ST-4 image
+            "st5",     // SBIG CCD camera ST-x image
+            "st6",     // SBIG CCD camera ST-x image
+            "st7",     // SBIG CCD camera ST-x image
+            "st8",     // SBIG CCD camera ST-x photo
+            "stx",     // SBIG CCD camera ST-x (astronomical image)
+            "tif",
+            "tiff",
+            "wgi",     // WildGame Innovations flexi video
+            "x3f",     // Sigma Camera RAW picture image
+            "ycbcra",  // Raw Y Cb Cr and alpha sample
+        ],
+        "edit_file": [
+            "dng",     // Leica
+            "exif",
+            "exv",
+            "mie",
+            "pp2",     // RawTherapee 2
+            "pp3",     // RawTherapee 3
+            "xml",     // Lightroom, Photoshop, Darktable, etc
+        ],
+        "preview_file": [
+            "apng",
+            "blp",
+            "bmp",
+            "cur",
+            "dcx",
+            "dds",
+            "dib",
+            "eps",
+            "flc",
+            "fli",
+            "fpx",
+            "ftex",
+            "gbr",
+            "gd",
+            "gif",
+            "heic",
+            "heif",
+            "icns",
+            "ico",
+            "im",
+            "imt",
+            "iptc",
+            "j2c", "j2k", "jp2", "jpc", "jpf", "jpg2", "jpm", "jpx",  // JPEG 2000
+            "jpg", "jpeg",
+            "mcidas",
+            "mic",
+            "mj2",
+            "mpo",
+            "msp",
+            "naa",
+            "pcd",
+            "pcx",
+            "pixar",
+            "png",
+            "ppm",
+            "psd",
+            "sgi",
+            "spider",
+            "tga",
+            "tiff",
+            "wal",
+            "webp",
+            "wmf",
+            "xbm",
+            "xpm",
+        ],
+    }
+}

@@ -1,3 +1,8 @@
+:root {
+  --accent-fill: navy;
+  --accent-text: wheat;
+}
+
 html,
 body {
   padding: 0;
@@ -6,8 +11,13 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+body {
+  padding: 20px 40px;
+}
+
 ul,
 ol {
+  list-style: none;
   margin: 0;
   padding: 0;
 }
@@ -16,9 +26,27 @@ img {
   max-width: 100%;
 }
 
+button,
+input,
+textarea,
+select,
+option {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+
 .subheading {
   font-size: 0.9em;
   font-weight: bold;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+}
+
+.flex-row {
+  display: flex;
+  grid-gap: 20px;
+  overflow: auto;
+  padding: 15px 0 20px;
 }
