@@ -7,6 +7,9 @@ import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
   try {
+    // Change to `getServerSideProps` when adding auth
+    // OR use /a/index to host the account editing screen to keep profile pages fast
+    //
     // Authenticate session context stored in cookie, and
     // if the authenticated user is looking at their own account page, then
     // import and use this function instead:

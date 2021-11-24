@@ -4,6 +4,15 @@ export const fetchFileSupport = () => fetch(
   `${FLASK_ENDPOINT.BASE}/config/supported_file_extensions`,
 )
 
+export const authenticateAccount = ({ account_name, account_email }) =>
+  fetch(`${FLASK_ENDPOINT.BASE}/account`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ account_name, account_email }),
+    method: 'PUT',
+  })
+
 export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {
   const formData = new FormData()
   if (raw_file) {

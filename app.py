@@ -173,34 +173,39 @@ def handle_supported_file_ext():
 @app.route('/account', methods=['PUT'])
 def handle_create_account():
     """Flask route for creating an account"""
-    account_options = request.json
-    if account_options is None:
-        return 'Bad request', 400
-    account_option_keys = account_options.keys()
-    if 'account_name' not in account_option_keys or \
-       'account_email' not in account_option_keys:
+
+    # # Check for existing session
+    # session_cookie = request.cookies.get('session')
+    # if session_cookie:
+    #     if session_cookie exists in Redis and account_email matches
+    #         return 'OK', 200
+    #     else
+    #         # delete cookie
+    #         response.set_cookie('session', '', expires=0)
+    #         session_cookie
+    #         return '', 403
+
+    if request.json is None or 'account_name' not in request.json \
+                            or 'account_email' not in request.json:
        return 'Bad request', 400
 
-    account = None
-    if 'account_role' in account_option_keys:
-        account = create_account(
-            engine,
-            account_options['account_name'],
-            account_options['account_email'],
-            account_options['account_role']
-        )
-    else:
-        account = create_account(
-            engine,
-            account_options['account_name'],
-            account_options['account_email']
-        )
-
+    account = select_account(engine, account_name=request.json['account_name'])
     if account is None:
-        return 'Failed to create', 500
-    return jsonify({ 'accountId': account.account_id }), 201
+        account_options = {
+            'account_name': request.json['account_name'],
+            'account_email': request.json['account_email']
+        }
+        if 'account_role' in request.json:
+            account_options['account_role'] = request.json['account_role']
+        account = create_account(engine, **account_options)
+    if account is None:
+        return 'Error creating account', 500
 
-@app.route('/account/<account_id>', methods=['POST'])
+    # TODO: send email with magic link/code to login
+
+    # request.cookies.set('session', 'mysecurehash')
+
+    return jsonify({ 'accountName': account.account_name }), 201
 
 @app.route('/account/<account_name>', methods=['POST'])
 def handle_update_account(account_name):
@@ -435,6 +440,13 @@ def handle_create_photo():
         if created_lens_manufacturer_id is not None:
             delete_manufacturer(created_lens_manufacturer_id)
         return 'Error creating photo', 500
+
+    # Create notifications
+    # actor_id = account.account_id
+    # follower_ids = select follower_id from account_follow where following_id == actor_id
+    # notify_options = {}
+    # for each id in follower_ids:
+    #     insert notification
 
 @app.route('/photo/<photo_id>', methods=['POST'])
 def handle_update_photo(photo_id):
