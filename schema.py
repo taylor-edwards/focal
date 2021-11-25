@@ -1,6 +1,7 @@
 """Graphene schema for GraphQL support"""
 
-from graphene import Argument, Field, ID, List, ObjectType, Schema, String
+from datetime import datetime
+from graphene import Argument, DateTime, Field, ID, Int, List, ObjectType, Schema, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from model import (
     Notification as NotificationModel,
@@ -134,11 +135,17 @@ class Query(ObjectType):
                           .first()
         return None
 
-    accounts = List(Account)
-    def resolve_accounts(self, info):
+    accounts = List(Account, limit=Argument(type=Int), offset=Argument(type=Int), \
+                    before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_accounts(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all accounts"""
          # pylint: disable=no-self-use
-        return Account.get_query(info).all()
+        return Account.get_query(info)
+                      .filter(AccountModel.edited_at <= before) \
+                      .filter(AccountModel.edited_at > after) \
+                      .order_by(AccountModel.edited_at, AccountModel.created_at) \
+                      .limit(limit) \
+                      .offset(offset)
 
     notification = Field(Notification, notification_id=Argument(type=ID, required=True))
     def resolve_notification(self, info, notification_id=None):
@@ -152,13 +159,19 @@ class Query(ObjectType):
     def resolve_flag(self, info, flag_id=None):
         """Query for flag by ID"""
          # pylint: disable=no-self-use
-        return Flag.get_query(info=info).filter(FlagModel.flag_id == flag_id)
+        return Flag.get_query(info=info).filter(FlagModel.flag_id == flag_id).first()
 
-    flags = List(Flag)
-    def resolve_flags(self, info):
+    flags = List(Flag, limit=Argument(type=Int), offset=Argument(type=Int), \
+                 before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_flags(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all flags"""
          # pylint: disable=no-self-use
-        return Flag.get_query(info).all()
+        return Flag.get_query(info)
+                   .filter(FlagModel.edited_at <= before) \
+                   .filter(FlagModel.edited_at > after) \
+                   .order_by(FlagModel.edited_at, FlagModel.created_at) \
+                   .limit(limit) \
+                   .offset(offset)
 
     ban = Field(Ban, ban_id=Argument(type=ID, required=True))
     def resolve_ban(self, info, ban_id):
@@ -166,11 +179,17 @@ class Query(ObjectType):
         # pylint: disable=no-self-use
         return Ban.get_query(info=info).filter(BanModel.ban_id == ban_id).first()
 
-    bans = List(Ban)
-    def resolve_bans(self, info):
+    bans = List(Ban, limit=Argument(type=Int), offset=Argument(type=Int), \
+                before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_bans(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all bans"""
          # pylint: disable=no-self-use
-        return Ban.get_query(info).all()
+        return Ban.get_query(info)
+                  .filter(BanModel.edited_at <= before) \
+                  .filter(BanModel.edited_at > after) \
+                  .order_by(BanModel.edited_at, BanModel.created_at) \
+                  .limit(limit) \
+                  .offset(offset)
 
     camera = Field(Camera, camera_id=Argument(type=ID, required=True))
     def resolve_camera(self, info, camera_id=None):
@@ -178,11 +197,17 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Camera.get_query(info=info).filter(CameraModel.camera_id == camera_id).first()
 
-    cameras = List(Camera)
-    def resolve_cameras(self, info):
+    cameras = List(Camera, limit=Argument(type=Int), offset=Argument(type=Int), \
+                   before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_cameras(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all cameras"""
          # pylint: disable=no-self-use
-        return Camera.get_query(info).all()
+        return Camera.get_query(info)
+                     .filter(CameraModel.edited_at <= before) \
+                     .filter(CameraModel.edited_at > after) \
+                     .order_by(CameraModel.edited_at, CameraModel.created_at) \
+                     .limit(limit) \
+                     .offset(offset)
 
     edit = Field(Edit, edit_id=Argument(type=ID, required=True))
     def resolve_edit(self, info, edit_id=None):
@@ -190,11 +215,17 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Edit.get_query(info=info).filter(EditModel.edit_id == edit_id).first()
 
-    edits = List(Edit)
-    def resolve_edits(self, info):
+    edits = List(Edit, limit=Argument(type=Int), offset=Argument(type=Int), \
+                 before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_edits(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all edits"""
          # pylint: disable=no-self-use
-        return Edit.get_query(info).all()
+        return Edit.get_query(info)
+                   .filter(EditModel.edited_at <= before) \
+                   .filter(EditModel.edited_at > after) \
+                   .order_by(EditModel.edited_at, EditModel.created_at) \
+                   .limit(limit) \
+                   .offset(offset)
 
     editor = Field(Editor, editor_id=Argument(type=ID, required=True))
     def resolve_editor(self, info, editor_id=None):
@@ -202,11 +233,17 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Editor.get_query(info=info).filter(EditorModel.editor_id == editor_id).first()
 
-    editors = List(Editor)
-    def resolve_editors(self, info):
+    editors = List(Editor, limit=Argument(type=Int), offset=Argument(type=Int), \
+                   before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_editors(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all editors"""
          # pylint: disable=no-self-use
-        return Editor.get_query(info).all()
+        return Editor.get_query(info)
+                     .filter(EditorModel.edited_at <= before) \
+                     .filter(EditorModel.edited_at > after) \
+                     .order_by(EditorModel.edited_at, EditorModel.created_at) \
+                     .limit(limit) \
+                     .offset(offset)
 
     lens = Field(Lens, lens_id=Argument(type=ID, required=True))
     def resolve_lens(self, info, lens_id=None):
@@ -214,11 +251,17 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Lens.get_query(info=info).filter(LensModel.lens_id == lens_id).first()
 
-    lenses = List(Lens)
-    def resolve_lenses(self, info):
+    lenses = List(Lens, limit=Argument(type=Int), offset=Argument(type=Int), \
+                  before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_lenses(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all lenses"""
          # pylint: disable=no-self-use
-        return Lens.get_query(info).all()
+        return Lens.get_query(info)
+                   .filter(LensModel.edited_at <= before) \
+                   .filter(LensModel.edited_at > after) \
+                   .order_by(LensModel.edited_at, LensModel.created_at) \
+                   .limit(limit) \
+                   .offset(offset)
 
     manufacturer = Field(Manufacturer, manufacturer_id=Argument(type=ID, required=True))
     def resolve_manufacturer(self, info, manufacturer_id=None):
@@ -228,11 +271,17 @@ class Query(ObjectType):
                            .filter(ManufacturerModel.manufacturer_id == manufacturer_id) \
                            .first()
 
-    manufacturers = List(Manufacturer)
-    def resolve_manufacturers(self, info):
+    manufacturers = List(Manufacturer, limit=Argument(type=Int), offset=Argument(type=Int), \
+                         before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_manufacturers(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all manufacturers"""
          # pylint: disable=no-self-use
-        return Manufacturer.get_query(info).all()
+        return Manufacturer.get_query(info)
+                           .filter(ManufacturerModel.edited_at <= before) \
+                           .filter(ManufacturerModel.edited_at > after) \
+                           .order_by(ManufacturerModel.edited_at, ManufacturerModel.created_at) \
+                           .limit(limit) \
+                           .offset(offset)
 
     photo = Field(Photo, photo_id=Argument(type=ID, required=True))
     def resolve_photo(self, info, photo_id=None):
@@ -240,11 +289,17 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Photo.get_query(info=info).filter(PhotoModel.photo_id == photo_id).first()
 
-    photos = List(Photo)
-    def resolve_photos(self, info):
+    photos = List(Photo, limit=Argument(type=Int), offset=Argument(type=Int), \
+                  before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_photos(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all photos"""
          # pylint: disable=no-self-use
-        return Photo.get_query(info).all()
+        return Photo.get_query(info)
+                    .filter(PhotoModel.edited_at <= before) \
+                    .filter(PhotoModel.edited_at > after) \
+                    .order_by(PhotoModel.edited_at, PhotoModel.created_at) \
+                    .limit(limit) \
+                    .offset(offset)
 
     preview = Field(Preview, preview_id=Argument(type=ID, required=True))
     def resolve_preview(self, info, preview_id=None):
@@ -252,11 +307,16 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Preview.get_query(info=info).filter(PreviewModel.preview_id == preview_id).first()
 
-    previews = List(Preview)
-    def resolve_previews(self, info):
+    previews = List(Preview, limit=Argument(type=Int), offset=Argument(type=Int), \
+                    before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_previews(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all previews"""
          # pylint: disable=no-self-use
-        return Preview.get_query(info=info).all()
+        return Preview.get_query(info=info).filter(PreviewModel.edited_at <= before) \
+                      .filter(PreviewModel.edited_at > after) \
+                      .order_by(PreviewModel.edited_at, PreviewModel.created_at) \
+                      .limit(limit) \
+                      .offset(offset)
 
     reply = Field(Reply, reply_id=Argument(type=ID, required=True))
     def resolve_reply(self, info, reply_id=None):
@@ -270,11 +330,17 @@ class Query(ObjectType):
          # pylint: disable=no-self-use
         return Tag.get_query(info=info).filter(TagModel.tag_id == tag_id).first()
 
-    tags = List(Tag)
-    def resolve_tags(self, info):
+    tags = List(Tag, limit=Argument(type=Int), offset=Argument(type=Int), \
+                before=Argument(type=DateTime), after=Argument(type=DateTime))
+    def resolve_tags(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all tags"""
          # pylint: disable=no-self-use
-        return Tag.get_query(info).all()
+        return Tag.get_query(info)
+                  .filter(TagModel.edited_at <= before) \
+                  .filter(TagModel.edited_at > after) \
+                  .order_by(TagModel.edited_at, TagModel.created_at) \
+                  .limit(limit) \
+                  .offset(offset)
 
     upvote = Field(Upvote, upvote_id=Argument(type=ID, required=True))
     def resolve_upvote(self, info, upvote_id=None):

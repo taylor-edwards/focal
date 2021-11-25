@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS account (
     email          VARCHAR(200) UNIQUE NOT NULL,
     verified_at    TIMESTAMP,
     created_at     TIMESTAMP NOT NULL DEFAULT now(),
-    edited_at      TIMESTAMP CHECK (edited_at > created_at),
+    edited_at      TIMESTAMP NOT NULL DEFAULT=now() CHECK (edited_at >= created_at),
     deleted_at     TIMESTAMP
 );
 
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS photo (
     shutter_speed_den  INTEGER CHECK (shutter_speed_den > 0),
     shutter_speed_num  INTEGER CHECK (shutter_speed_num > 0),
     created_at         TIMESTAMP NOT NULL DEFAULT now(),
-    edited_at          TIMESTAMP CHECK (edited_at > created_at),
+    edited_at          TIMESTAMP NOT NULL DEFAULT=now() CHECK (edited_at >= created_at),
     CONSTRAINT title_or_desc CHECK (photo_title IS NOT NULL OR photo_description IS NOT NULL)
 );
 
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS edit (
     edit_width          INTEGER CHECK (edit_width > 0),
     edit_height         INTEGER CHECK (edit_height > 0),
     created_at          TIMESTAMP NOT NULL DEFAULT now(),
-    edited_at           TIMESTAMP CHECK (edited_at > created_at),
+    edited_at           TIMESTAMP NOT NULL DEFAULT=now() CHECK (edited_at >= created_at),
     CONSTRAINT title_or_desc CHECK (edit_title IS NOT NULL OR edit_description IS NOT NULL)
 );
 
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS reply (
     edit_id    INTEGER REFERENCES edit ON UPDATE CASCADE ON DELETE CASCADE,
     reply_text VARCHAR(500) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
-    edited_at  TIMESTAMP CHECK (edited_at > created_at),
+    edited_at  TIMESTAMP NOT NULL DEFAULT=now() CHECK (edited_at >= created_at),
     CONSTRAINT single_target CHECK ((photo_id IS NULL) <> (edit_id IS NULL)) -- only specify one foreign key
 );
 
