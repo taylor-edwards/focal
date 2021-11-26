@@ -19,8 +19,8 @@ Flask endpoints:
 | /reply        | PUT        | create_reply        | Redis, Postgres     |
 | /reply        | POST       | update_reply        | Redis, Postgres     |
 | /reply        | DELETE     | delete_reply        | Redis, Postgres     |
-| /upvote       | PUT        | create_upvote       | Redis, Postgres     |
-| /upvote       | DELETE     | delete_upvote       | Redis, Postgres     |
+| /reaction     | PUT        | create_reaction     | Redis, Postgres     |
+| /reaction     | DELETE     | delete_reaction     | Redis, Postgres     |
 | /preview      | PUT        | create_preview      | Redis, Postgres     |
 | /preview      | POST       | update_preview      | Redis, Postgres     |
 | /preview      | DELETE     | delete_preview      | Redis, Postgres     |
@@ -80,8 +80,8 @@ from handlers import (
     create_reply,
     update_reply,
     delete_reply,
-    create_upvote,
-    delete_upvote,
+    create_reaction,
+    delete_reaction,
     create_preview,
     update_preview,
     delete_preview,
@@ -125,16 +125,11 @@ with open('config.json', 'r') as f:
 
 # Ensure upload directories exist
 
-upload_dir = os.path.join(os.getcwd(), secure_filename(config['upload_directory']))
+upload_dir = os.path.join(os.getcwd(), *[secure_filename(p) for p in config['upload_paths']])
 try:
     os.mkdir(upload_dir)
 except FileExistsError:
     pass
-for path_name in config['upload_paths']:
-    try:
-        os.mkdir(os.path.join(upload_dir, secure_filename(path_name)))
-    except FileExistsError:
-        pass
 
 # Open a connection to the Postgres database
 
@@ -377,7 +372,6 @@ def handle_create_photo():
 
             file_path = os.path.join(
                 app.config['UPLOAD_FOLDER'],
-                secure_filename('raw_file'),
                 secure_filename(hash_file(file).hexdigest() + '.' + extension)
             )
 
@@ -398,7 +392,6 @@ def handle_create_photo():
             image = Image.open(file)
             file_path = os.path.join(
                 app.config['UPLOAD_FOLDER'],
-                secure_filename('preview_file'),
                 secure_filename(hash_file(file).hexdigest() + '.' + config['preview_image_format'])
             )
             image.thumbnail(config['preview_image_size'])
@@ -515,21 +508,21 @@ def handle_delete_reply(reply_id):
     delete_reply(engine, reply_id)
     return '', 204
 
-@app.route('/upvote', methods=['PUT'])
-def handle_create_upvote():
-    """Flask route for creating an upvote"""
-    upvote_options = request.json
-    if upvote_options is None:
+@app.route('/reaction', methods=['PUT'])
+def handle_create_reaction():
+    """Flask route for creating an reaction"""
+    reaction_options = request.json
+    if reaction_options is None:
         return 'Bad request', 400
-    upvote = create_upvote(engine, **upvote_options)
-    if upvote is None:
-        return 'Error creating upvote', 500
-    return jsonify({ 'upvoteId': upvote.upvote_id }), 201
+    reaction = create_reaction(engine, **reaction_options)
+    if reaction is None:
+        return 'Error creating reaction', 500
+    return jsonify({ 'reactionId': reaction.reaction_id }), 201
 
-@app.route('/upvote', methods=['DELETE'])
-def handle_delete_upvote():
-    """Flask route for deleting an upvote"""
-    delete_upvote(engine, upvote_id)
+@app.route('/reaction', methods=['DELETE'])
+def handle_delete_reaction():
+    """Flask route for deleting an reaction"""
+    delete_reaction(engine, reaction_id)
     return '', 204
 
 @app.route('/preview', methods=['PUT'])

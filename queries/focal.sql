@@ -4,11 +4,13 @@ CREATE DATABASE focal;
 GRANT CONNECT ON DATABASE focal TO focal;
 
 -- Destroy all tables and rows:
-TRUNCATE account, ban, account_ban, account_block, account_follow, manufacturer, camera, lens, editor,
-preview, photo, edit, reply, tag, photo_tag, upvote, notification, flag RESTART IDENTITY CASCADE;
-DROP TABLE account, ban, account_ban, account_block, account_follow, manufacturer, camera, lens, editor, preview,
-photo, edit, reply, tag, photo_tag, upvote, notification, flag CASCADE;
-DROP TYPE account_role, misbehavior, platform, notify_reason, read_status CASCADE;
+TRUNCATE account, ban, account_ban, account_block, account_follow, manufacturer, camera, lens,
+editor, preview, photo, edit, reply, tag, photo_tag, upvote, notification, flag,
+account_notification, file RESTART IDENTITY CASCADE;
+DROP TABLE account, ban, account_ban, account_block, account_follow, manufacturer, camera, lens,
+editor, preview, photo, edit, reply, tag, photo_tag, upvote, notification, flag,
+account_notification, file CASCADE;
+DROP TYPE account_role, misbehavior, platform, action_type, media_category, read_status CASCADE;
 
 CREATE TYPE account_role AS ENUM ('admin', 'user');
 
@@ -196,9 +198,7 @@ CREATE TABLE IF NOT EXISTS upvote (
            (upvoted_reply_id IS NOT NULL)::INTEGER = 1)
 );
 
-CREATE TYPE notify_reason AS ENUM ('replied', 'submitted_edit', 'upvoted');
-
-CREATE TYPE read_status AS ENUM ('unread', 'read');
+CREATE TYPE action_type AS ENUM ('replied', 'submitted_edit', 'upvoted');
 
 -- Notify users when others reply to, submit edits to, or upvote one of their posts.
 -- Automatically delete notifications that have been read and are >30 days old.
@@ -212,8 +212,7 @@ CREATE TABLE IF NOT EXISTS notification (
     created_edit_id   INTEGER REFERENCES edit ON UPDATE CASCADE ON DELETE CASCADE,
     created_reply_id  INTEGER REFERENCES reply ON UPDATE CASCADE ON DELETE CASCADE,
     created_upvote_id INTEGER REFERENCES upvote ON UPDATE CASCADE ON DELETE CASCADE,
-    notify_reason     NOTIFY_REASON NOT NULL,
-    read_status       READ_STATUS NOT NULL DEFAULT 'unread',
+    action_type     NOTIFY_REASON NOT NULL,
     created_at        TIMESTAMP NOT NULL DEFAULT now(),
     -- don't notify users of their own actions
     CONSTRAINT different_targets CHECK (recipient_id != actor_id),

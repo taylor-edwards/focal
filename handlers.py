@@ -13,7 +13,7 @@ from model import (
     Preview,
     Reply,
     Tag,
-    Upvote
+    Reaction
 )
 
 def select_account(engine, account_id=None, account_email=None, account_name=None):
@@ -339,40 +339,40 @@ def delete_reply(engine, reply_id):
         session.delete(reply)
         session.commit()
 
-def select_upvote(engine, upvote_id):
-    """Select an upvote"""
+def select_reaction(engine, reaction_id):
+    """Select an reaction"""
     with Session(engine) as session:
-        if upvote_id is not None:
-            return session.query(Upvote).filter_by(upvote_id=upvote_id).first()
+        if reaction_id is not None:
+            return session.query(Reaction).filter_by(reaction_id=reaction_id).first()
         return None
 
-def create_upvote(
+def create_reaction(
     engine,
     account_id,
-    upvoted_photo_id=None,
-    upvoted_edit_id=None,
-    upvoted_reply_id=None
+    reaction_photo_id=None,
+    reaction_edit_id=None,
+    reaction_reply_id=None
 ):
-    """Create an upvote"""
+    """Create an reaction"""
     with Session(engine) as session:
-        upvote = Upvote(
+        reaction = Reaction(
             account_id=account_id,
-            upvoted_photo_id=upvoted_photo_id,
-            upvoted_edit_id=upvoted_edit_id,
-            upvoted_reply_id=upvoted_reply_id
+            reaction_photo_id=reaction_photo_id,
+            reaction_edit_id=reaction_edit_id,
+            reaction_reply_id=reaction_reply_id
         )
-        session.add(upvote)
+        session.add(reaction)
         session.commit()
-        session.refresh(upvote)
-        return upvote
+        session.refresh(reaction)
+        return reaction
 
-def delete_upvote(engine, upvote_id):
-    """Delete an upvote"""
+def delete_reaction(engine, reaction_id):
+    """Delete an reaction"""
     with Session(engine) as session:
-        upvote = select_upvote(engine, upvote_id=upvote_id)
-        if upvote is None:
-            raise Exception(f'Upvote not found ({upvote_id})')
-        session.delete(upvote)
+        reaction = select_reaction(engine, reaction_id=reaction_id)
+        if reaction is None:
+            raise Exception(f'Reaction not found ({reaction_id})')
+        session.delete(reaction)
         session.commit()
 
 def create_preview(

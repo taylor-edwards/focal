@@ -1,6 +1,5 @@
 {
-    "upload_directory": "uploads",
-    "upload_paths": ["raw_file", "edit_file", "preview_file"],
+    "upload_paths": ["web", "public", "uploads"],
     "preview_image_format": "jpg",
     "preview_image_size": [2000, 2000],
     "supported_file_extensions": {
