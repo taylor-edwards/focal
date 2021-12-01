@@ -1,5 +1,17 @@
 import { FLASK_ENDPOINT } from 'config'
 
+/**
+ * GraphQL endpoints should only be used in serverside code. They must not be
+ * exposed to the internet because the GraphQL integration in this app does not
+ * know how to authorize requests.
+ *
+ * Queries that need to be accessed from a client should be imported
+ * dynamically in the getStaticPaths, getStaticProps and getServerSideProps
+ * methods, or by proxy via an opaque REST endpoint in the corresponding
+ * web/pages/api directory. Query consumers must perform request authorization
+ * independently from this GraphQL integration.
+ */
+
 export const fetchQuery = (name, query, variables = {}) => {
   const controller = new AbortController()
   const timer = setTimeout(
@@ -25,101 +37,188 @@ export const fetchQuery = (name, query, variables = {}) => {
   })
 }
 
-const previewFragment = `
-  preview {
-    filePath: previewFilePath
-    width: previewWidth
-    height: previewHeight
+const previewFields = `
+  path: filePath
+  width: imageWidth
+  height: imageHeight`
+
+
+const fileFields = `
+  name: fileName
+  path: filePath
+  ext: fileExtension
+  size: fileSize`
+
+const commonPhotoFields = `
+  id: photoId
+  title: photoTitle
+  text: photoText
+  createdAt
+  editedAt
+  previewFile {
+    ${previewFields}
+  }
+  rawFile {
+    ${fileFields}
+    width: imageWidth
+    height: imageHeight
+  }
+  edits {
+    id: editId
+    title: editTitle
+    createdAt
+    account {
+      name: accountName
+    }
+    previewFile {
+      ${previewFields}
+    }
+  }
+  replies {
+    id: replyId
+    text: replyText
+    createdAt
+    account {
+      name: accountName
+    }
   }`
 
-const photosFeedFragment = `
-  photos {
+const commonEditFields = `
+  id: editId
+  title: editTitle
+  text: editText
+  createdAt
+  editedAt
+  previewFile {
+    ${previewFields}
+  }
+  sidecarFile {
+    ${fileFields}
+  }
+  photo {
     id: photoId
     title: photoTitle
     createdAt
     account {
       name: accountName
     }
-    ${previewFragment}
+    previewFile {
+      ${previewFields}
+    }
   }
-`
-
-const editsFragment = `
-  edits {
-    id: editId
-    title: editTitle
-    filePath: editFilePath
-    fileExtension: editFileExtension
-    fileSize: editFileSize
-    width: editWidth
-    height: editHeight
+  replies {
+    id: replyId
+    text: replyText
     createdAt
     account {
       name: accountName
     }
-    ${previewFragment}
-  }
-`
+  }`
+
+const commonReplyFields = `
+  id: replyId
+  text: replyText
+  createdAt
+  editedAt`
+
+const commonAccountFields = `
+  name: accountName
+  createdAt
+  replies {
+    ${commonReplyFields}
+    photo {
+      photoId
+      photoTitle
+      account {
+        name: accountName
+      }
+    }
+    edit {
+      editId
+      editTitle
+      account {
+        name: accountName
+      }
+    }
+  }`
 
 export const fetchAccounts = () => fetchQuery(
   'Accounts',
   `query Accounts {
     accounts {
-      accountName
+      name: accountName
     }
   }`
 )
 
-export const fetchPublicAccount = ({ accountId, accountName }) => fetchQuery(
+export const fetchAccount = ({ accountName }) => fetchQuery(
   'PublicAccount',
-  `query PublicAccount($accountId: ID, $accountName: String) {
-    account(accountId: $accountId, accountName: $accountName) {
-      name: accountName
-      createdAt
-      editedAt
-      ${photosFeedFragment}
-      ${editsFragment}
+  `query PublicAccount($accountName: String) {
+    account(accountName: $accountName) {
+      ${commonAccountFields}
+      following {
+        name: accountName
+      }
+      followers {
+        name: accountName
+      }
+      photos {
+        ${commonPhotoFields}
+      }
+      edits {
+        ${commonEditFields}
+      }
     }
   }`,
-  { accountId, accountName },
+  { accountName },
 )
 
-export const fetchPrivateAccount = ({ accountId, accountName }) => fetchQuery(
+export const fetchAccountDetails = ({ accountName }) => fetchQuery(
   'PrivateAccount',
-  `query PrivateAccount($accountId: ID, $accountName: String) {
-    account(accountId: $accountId, accountName: $accountName) {
+  `query PrivateAccount($accountName: String) {
+    account(accountName: $accountName) {
       name: accountName
       email: accountEmail
+      role: accountRole
       createdAt
-      verifiedAt
       editedAt
-      ${photosFeedFragment}
-      ${editsFragment}
+      flags {
+        id: flagId
+        name: flagName
+        text: flagText
+      }
       bans {
-        at: bannedAt
-        until: bannedUntil
-        reason: banReason
+        id: banId
+        createdAt
+        expiresAt
+        name: banName
+        text: banText
       }
       notifications {
         id: notificationId
-        reason: notifyReason
-        actor {
-          name: accountName
-        }
-        photo: targetPhoto {
-          id: photoId
-          title: photoTitle
-          ${previewFragment}
-        }
-        edit: targetEdit {
-          id: editId
-          title: editTitle
-          ${previewFragment}
+        createdAt
+        viewedAt
+        event {
+          account {
+            name: accountName
+          }
+          photo {
+            id: photoId
+            title: photoTitle
+          }
+          edit {
+            id: editId
+            title: editTitle
+          }
+          reply {
+            id: replyId
+            text: replyText
+          }
         }
       }
     }
   }`,
-  { accountId, accountName },
+  { accountName },
 )
 
 export const fetchManufacturers = () => fetchQuery(
@@ -140,22 +239,38 @@ export const fetchManufacturers = () => fetchQuery(
   }`
 )
 
+export const fetchPhotos = (options = {}) => fetchQuery(
+  'Photos',
+  `query Photos {
+    photos {
+      ${commonPhotoFields}
+    }
+  }`,
+  options,
+)
+
 export const fetchPhoto = photoId => fetchQuery(
   'Photo',
   `query Photo($photoId: ID!) {
     photo(photoId: $photoId) {
+      ${commonPhotoFields}
       id: photoId
       title: photoTitle
-      description: photoDescription
-      rawFilePath
-      rawFileSize
-      rawFileName
-      rawFileExtension
+      text: photoText
       aperture
       focalLength
       iso
       shutterSpeedDenominator
       shutterSpeedNumerator
+      account {
+        name: accountName
+        previewFile {
+          ${previewFields}
+        }
+      }
+      previewFile {
+        ${previewFields}
+      }
       camera {
         id: cameraId
         model: cameraModel
@@ -172,6 +287,18 @@ export const fetchPhoto = photoId => fetchQuery(
           name: manufacturerName
         }
       }
+      account {
+        name: accountName
+      }
+      edits {
+        title: editTitle
+        previewFile {
+          ${previewFields}
+        }
+        account {
+          name: accountName
+        }
+      }
     }
   }`,
   { photoId },
@@ -180,21 +307,27 @@ export const fetchPhoto = photoId => fetchQuery(
 export const fetchEdit = editId => fetchQuery(
   'Edit',
   `query Edit($editId: ID!) {
-    id: editId
-    title: editTitle
-    description: editDescription
-    filePath: editFilePath
-    fileExtension: editFileExtension
-    fileSize: editFileSize
-    width: editWidth
-    height: editHeight
-    createdAt
-    editedAt
-    editor {
-      id: editorId
-      name: editorName
-      version: editorVersion
-      platform: editorPlatform
+    edit(editId: $editID) {
+      id: editId
+      title: editTitle
+      text: editText
+      createdAt
+      editedAt
+      sidecarFile {
+        ${fileFields}
+      }
+      previewFile {
+        ${previewFields}
+      }
+      editor {
+        id: editorId
+        name: editorName
+        version: editorVersion
+        platform: editorPlatform
+      }
+      account {
+        name: accountName
+      }
     }
   }`,
   { editId },

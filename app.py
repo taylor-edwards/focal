@@ -21,9 +21,6 @@ Flask endpoints:
 | /reply        | DELETE     | delete_reply        | Redis, Postgres     |
 | /reaction     | PUT        | create_reaction     | Redis, Postgres     |
 | /reaction     | DELETE     | delete_reaction     | Redis, Postgres     |
-| /preview      | PUT        | create_preview      | Redis, Postgres     |
-| /preview      | POST       | update_preview      | Redis, Postgres     |
-| /preview      | DELETE     | delete_preview      | Redis, Postgres     |
 | /tag          | PUT        | create_tag          | Redis, Postgres     |
 | /tag          | DELETE     | delete_tag          | Redis, Postgres     |
 | /editor       | PUT        | create_editor       | Redis, Postgres     |
@@ -82,9 +79,8 @@ from handlers import (
     delete_reply,
     create_reaction,
     delete_reaction,
-    create_preview,
-    update_preview,
-    delete_preview,
+    create_file,
+    delete_file,
     create_tag,
     delete_tag,
     create_editor,
@@ -119,13 +115,12 @@ def del_prop(object, property):
         del object[property]
 
 # Load configuration
-
 with open('config.json', 'r') as f:
     config = json.load(f)
 
 # Ensure upload directories exist
 
-upload_dir = os.path.join(os.getcwd(), *[secure_filename(p) for p in config['upload_paths']])
+upload_dir = os.path.join(os.getcwd(), *[secure_filename(p) for p in config['upload_path']])
 try:
     os.mkdir(upload_dir)
 except FileExistsError:
@@ -165,10 +160,9 @@ def handle_supported_file_ext():
         return '', 404
     return jsonify(config['supported_file_extensions']), 200
 
-@app.route('/account', methods=['PUT'])
-def handle_create_account():
+@app.route('/account', methods=['POST'])
+def handle_account():
     """Flask route for creating an account"""
-
     # # Check for existing session
     # session_cookie = request.cookies.get('session')
     # if session_cookie:
@@ -184,7 +178,11 @@ def handle_create_account():
                             or 'account_email' not in request.json:
        return 'Bad request', 400
 
-    account = select_account(engine, account_name=request.json['account_name'])
+    name = request.json['account_name']
+    if not str.isascii(name) or len(name) < 1:
+        return 'Invalid name', 400
+
+    account = select_account(engine, account_name=name)
     if account is None:
         account_options = {
             'account_name': request.json['account_name'],
@@ -192,7 +190,10 @@ def handle_create_account():
         }
         if 'account_role' in request.json:
             account_options['account_role'] = request.json['account_role']
-        account = create_account(engine, **account_options)
+        try:
+            account = create_account(engine, **account_options)
+        except ValueError as err:
+            return str(err), 400
     if account is None:
         return 'Error creating account', 500
 
@@ -252,7 +253,7 @@ def handle_create_photo():
     del_prop(photo_options, 'account_name')
 
     if ('photo_title' not in photo_options or len(photo_options['photo_title']) == 0) \
-       and ('photo_description' not in photo_options or len(photo_options['photo_description']) == 0):
+       and ('photo_text' not in photo_options or len(photo_options['photo_text']) == 0):
         return 'Neither title nor description found', 400
 
     if 'raw_file' not in request.files and 'preview_file' not in request.files:
@@ -346,7 +347,10 @@ def handle_create_photo():
         if created_lens_id is not None:
             delete_lens(created_lens_id)
             created_lens_id = None
-        if created_lens_manufacturer_id is not None:
+        if created_lens_manufacturer_id is not None and \
+           created_lens_manufacturer_id != created_camera_manufacturer_id:
+            # don't delete the camera's manufacturer in case the camera row
+            # insertion was successful but the lens insertion failed
             delete_manufacturer(created_lens_manufacturer_id)
             created_lens_manufacturer_id = None
         pass # tolerate lens failure while posting
@@ -360,6 +364,46 @@ def handle_create_photo():
 
     # Attach files
     # """Process raw and preview files"""
+    raw_file_path = None
+    preview_file_path = None
+    try:
+        if 'preview_file' in request.files:
+            file = request.files['preview_file']
+            if '.' not in file.filename:
+                raise ValueError('Extension not found', 415)
+
+            extension = read_extension(file.filename)
+            if extension not in config['supported_file_extensions']['preview_file']:
+                raise ValueError(f'Unsupported extension ({extension})', 415)
+
+            file_path = os.path.join(
+                app.config['UPLOAD_FOLDER'],
+                secure_filename(hash_file(file).hexdigest() + '.' + config['preview_image_format'])
+            )
+            if os.path.exists(file_path):
+                raise FileExistsError(f'Preview file is a likely duplicate of {str(file_path)}')
+            image = Image.open(file)
+            image.thumbnail(config['preview_image_size'])
+            image.save(file_path)
+            preview_file_path = file_path
+            size = os.stat(file_path).st_size
+
+            preview_entry = create_file(engine,
+                file_path=str(file_path), file_name=str(file.filename),
+                file_extension=config['preview_image_format'], file_size=size,
+                image_width=image.size[0], image_height=image.size[1])
+            if preview_entry is None:
+                raise Exception('Error creating preview')
+            photo_options['preview_file_id'] = preview_entry.file_id
+    except Exception as err:
+        print('Could not process photo preview file. Error:', str(err))
+        if preview_file_path is not None:
+            os.remove(preview_file_path)
+            preview_file_path = None
+        if 'preview_file_id' in photo_options:
+            delete_file(engine, photo_options['preview_file_id'])
+            del_prop(photo_options, 'preview_file_id')
+
     try:
         if 'raw_file' in request.files:
             file = request.files['raw_file']
@@ -374,56 +418,62 @@ def handle_create_photo():
                 app.config['UPLOAD_FOLDER'],
                 secure_filename(hash_file(file).hexdigest() + '.' + extension)
             )
-
-            photo_options['raw_file_path'] = str(file_path)
-            photo_options['raw_file_extension'] = extension
-            photo_options['raw_file_name'] = str(file.filename)
-
+            if os.path.exists(file_path):
+                raise FileExistsError(f'Preview file is a likely duplicate of {str(file_path)}')
             file.save(file_path)
-            photo_options['raw_file_size'] = os.stat(file_path).st_size # evaluates to 0
+            raw_file_path = file_path
+            size = os.stat(file_path).st_size
 
-        if 'preview_file' in request.files:
-            file = request.files['preview_file']
-            if '.' not in file.filename:
-                raise ValueError('Extension not found', 415)
-            extension = read_extension(file.filename)
-            if extension not in config['supported_file_extensions']['preview_file']:
-                raise ValueError(f'Unsupported extension ({extension})', 415)
-            image = Image.open(file)
-            file_path = os.path.join(
-                app.config['UPLOAD_FOLDER'],
-                secure_filename(hash_file(file).hexdigest() + '.' + config['preview_image_format'])
-            )
-            image.thumbnail(config['preview_image_size'])
-            image.save(file_path)
+            raw_entry = create_file(engine, file_path=str(file_path), file_name=str(file.filename),
+                                    file_extension=extension, file_size=size)
+            if raw_entry is None:
+                raise Exception('Error creating raw file')
+            photo_options['raw_file_id'] = raw_entry.file_id
+            # if 'preview_file_id' not in photo_options:
+            #     # try to extract an embedded image from the raw file to use as the preview
+            #     try:
+            #         # get thumbnail image
+            #         # write to disk
+            #         # insert into File table in database
+            #         # set photo_options['preview_file_id'] to the new File.file_id
+            #         # set preview_file_path = file_path
+            #     except Exception as err:
+            #         print('Failed to extract thumbnail from raw file')
+    except Exception as err:
+        print('Could not process photo raw file. Error:', str(err))
+        if raw_file_path is not None:
+            os.remove(raw_file_path)
+            raw_file_path = None
+        if 'raw_file_id' in photo_options:
+            delete_file(engine, photo_options['raw_file_id'])
+            del_prop(photo_options, 'raw_file_id')
 
-            # Insert preview
-            # """Create preview row"""
-            preview = create_preview(engine,
-                                     preview_file_path=str(file_path),
-                                     preview_width=image.size[0],
-                                     preview_height=image.size[1],
-                                     preview_file_size=os.stat(file_path).st_size)
-            if preview is None:
-                os.remove(file_path)
-                raise Exception('Error creating preview')
-            photo_options['preview_id'] = preview.preview_id
-
+    try:
+        if not ('preview_file_id' in photo_options or 'raw_file_id' in photo_options):
+            raise ValueError('Photo posts must include at least one raw file or preview image')
         # Insert photo row and return its photo_id
         photo = create_photo(engine, **photo_options)
         if photo is None:
-            raise Exception('Error creating photo', 409)
+            raise Exception('Error creating photo')
         return jsonify({ 'photoId': photo.photo_id }), 201
     except Exception as err:
-        print(err.args)
-        # back out any preview and raw file uploads
-        if 'raw_file_path' in photo_options:
-            os.remove(photo_options['raw_file_path'])
-        if 'preview_id' in photo_options:
-            delete_preview(photo_options['preview_id'])
-        if 'preview_file_path' in photo_options:
-            os.remove(photo_options['preview_file_path'])
-        # undo equipment creations if not already handled
+        print('Could not create_photo:', str(err))
+
+        # delete any files written to disk
+        if preview_file_path is not None:
+            os.remove(preview_file_path)
+            preview_file_path = None
+        if raw_file_path is not None:
+            os.remove(raw_file_path)
+            raw_file_path = None
+
+        # back out any database insertions
+        if 'preview_file_id' in photo_options:
+            delete_file(engine, photo_options['preview_file_id'])
+            del_prop(photo_options, 'preview_file_id')
+        if 'raw_file_id' in photo_options:
+            delete_file(engine, photo_options['raw_file_id'])
+            del_prop(photo_options, 'raw_file_id')
         if created_camera_id is not None:
             delete_camera(engine, created_camera_id)
         if created_camera_manufacturer_id is not None:
@@ -432,7 +482,8 @@ def handle_create_photo():
             delete_lens(created_lens_id)
         if created_lens_manufacturer_id is not None:
             delete_manufacturer(created_lens_manufacturer_id)
-        return 'Error creating photo', 500
+
+        return str(err), 500
 
     # Create notifications
     # actor_id = account.account_id
@@ -523,32 +574,6 @@ def handle_create_reaction():
 def handle_delete_reaction():
     """Flask route for deleting an reaction"""
     delete_reaction(engine, reaction_id)
-    return '', 204
-
-@app.route('/preview', methods=['PUT'])
-def handle_create_preview():
-    """Flask route for creating a preview"""
-    preview_options = request.json
-    if preview_options is None:
-        return 'Bad request', 400
-    preview = create_preview(engine, **preview_options)
-    if preview is None:
-        return 'Error creating preview', 500
-    return jsonify({ 'previewId': preview.preview_id }), 201
-
-@app.route('/preview/<preview_id>', methods=['POST'])
-def handle_update_preview(preview_id):
-    """Flask route for updating a preview"""
-    preview_options = request.json
-    if preview_options is None:
-        return 'Bad request', 400
-    update_preview(engine, preview_id, **preview_options)
-    return '', 200
-
-@app.route('/preview/<preview_id>', methods=['DELETE'])
-def handle_delete_preview(preview_id):
-    """Flask route for deleting a preview"""
-    delete_preview(engine, preview_id)
     return '', 204
 
 @app.route('/tag', methods=['PUT'])

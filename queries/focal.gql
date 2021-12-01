@@ -1,22 +1,18 @@
-query QueryAll($accountId: ID!) {
+query Focal {
   accounts {
-    accountId
-    accountName
-    accountEmail
-  }
-  account(accountId: $accountId) {
-    accountRole
-    accountName
-    accountEmail
+    role: accountRole
+    name: accountName
+    email: accountEmail
     createdAt
-    verifiedAt
     editedAt
-    bans {
-      id: banId
-      at: bannedAt
-      until: bannedUntil
-      reason: banReason
-      text: banText
+    previewFile {
+      path: filePath
+    }
+    following {
+      name: accountName
+    }
+    followers {
+      name: accountName
     }
     blocked {
       name: accountName
@@ -24,139 +20,187 @@ query QueryAll($accountId: ID!) {
     blockedBy {
       name: accountName
     }
+    bans {
+      id: banId
+      createdAt
+      expiresAt
+      name: banName
+      text: banText
+    }
+    flags {
+      id: flagId
+      name: flagName
+      text: flagText
+    }
     notifications {
-      reason: notifyReason
-      actor {
-        name: accountName
-      }
-      createdEditId
-      createdReplyId
-      photo: targetPhoto {
-        id: photoId
-        title: photoTitle
-        preview {
-          id: previewId
-          filePath: previewFilePath
-        }
+      id: notificationId
+      createdAt
+      viewedAt
+      event {
+        type: eventType
         account {
           name: accountName
         }
-      }
-      edit: targetEdit {
-        id: editId
-        title: editTitle
-        preview {
-          id: previewId
-          filePath: previewFilePath
+        photo {
+          id: photoId
+          title: photoTitle
         }
-        account {
-          name: accountName
+        edit {
+          id: editId
+          title: editTitle
         }
-      }
-      reply: targetReply {
-        id: replyId
-        text: replyText
+        reply {
+          id: replyId
+          text: replyText
+        }
       }
     }
     photos {
       id: photoId
       title: photoTitle
-      description: photoDescription
-      rawWidth
-      rawHeight
-      aperture
-      focalLength
-      iso
-      shutterSpeedDenominator
-      shutterSpeedNumerator
-      camera {
-        id: cameraId
-        model: cameraModel
-        manufacturer {
-          id: manufacturerId
-          name: manufacturerName
-        }
+      text: photoText
+      createdAt
+      editedAt
+      previewFile {
+        path: filePath
+        width: imageWidth
+        height: imageHeight
       }
-      lens {
-        id: lensId
-        model: lensModel
-        manufacturer {
-          id: manufacturerId
-          name: manufacturerName
-        }
+      rawFile {
+        path: filePath
+        name: fileName
+        ext: fileExtension
+        size: fileSize
       }
-      preview {
-        id: previewId
-        filePath: previewFilePath
+      edits {
+        id: editId
+        title: editTitle
+        createdAt
+        account {
+          name: accountName
+        }
+        previewFile {
+          path: filePath
+          width: imageWidth
+          height: imageHeight
+        }
       }
       replies {
         id: replyId
         text: replyText
         createdAt
-      }
-      edits {
-        id: editId
-        title: editTitle
-        description: editDescription
-        filePath: editFilePath
-        extension: editFileExtension
-        size: editFileSize
-        width: editWidth
-        height: editHeight
-        createdAt
-        editedAt
-        editor {
-          id: editorId
-          name: editorName
-          version: editorVersion
-          platform: editorPlatform
-        }
-      }
-      upvotes {
-        upvoteId
         account {
           name: accountName
         }
       }
-      tags {
-        tagId
-        tagName
-      }
     }
     edits {
-      editId
-      editTitle
-      editDescription
-      editFilePath
-      editFileExtension
-      editFileSize
-      editWidth
-      editHeight
+      id: editId
+      title: editTitle
+      text: editText
       createdAt
       editedAt
-      editor {
-        editorId
-        editorName
-        editorVersion
-        editorPlatform
+      previewFile {
+        path: filePath
+        width: imageWidth
+        height: imageHeight
       }
-      photo {
-        photoId
-        photoTitle
-        photoDescription
-        preview {
-          previewId
-          previewFilePath
-        }
+      sidecarFile {
+        path: filePath
+        name: fileName
+        ext: fileExtension
+        size: fileSize
       }
-    }
-    upvotes {
-      id: upvoteId
       photo {
         id: photoId
         title: photoTitle
-        preview {
-          filePath: previewFilePath
+        createdAt
+        account {
+          name: accountName
+        }
+        previewFile {
+          path: filePath
+          width: imageWidth
+          height: imageHeight
+        }
+      }
+      replies {
+        id: replyId
+        text: replyText
+        createdAt
+        account {
+          name: accountName
+        }
+      }
+    }
+    replies {
+      id: replyId
+      text: replyText
+      createdAt
+      editedAt
+      photo {
+        photoId
+        photoTitle
+        account {
+          name: accountName
+        }
+      }
+      edit {
+        editId
+        editTitle
+        account {
+          name: accountName
+        }
+      }
+    }
+  }
+  events {
+    eventId
+    eventType
+    createdAt
+    account {
+      name: accountName
+    }
+    photo {
+      id: photoId
+      title: photoTitle
+      previewFile {
+        path: filePath
+        width: imageWidth
+        height: imageHeight
+      }
+      reactions {
+        reactionId
+        reactionName
+        reactionEmoji
+      }
+    }
+    edit {
+      id: editId
+      title: editTitle
+      previewFile {
+        path: filePath
+        width: imageWidth
+        height: imageHeight
+      }
+      replies {
+        replyId
+        replyText
+        account {
+          name: accountName
+        }
+      }
+    }
+    reply {
+      id: replyId
+      text: replyText
+      photo {
+        id: photoId
+        title: photoTitle
+        previewFile {
+          path: filePath
+          width: imageWidth
+          height: imageHeight
         }
         account {
           name: accountName
@@ -165,82 +209,48 @@ query QueryAll($accountId: ID!) {
       edit {
         id: editId
         title: editTitle
-        description: editDescription
-        preview {
-          id: previewId
-          filePath: previewFilePath
+        previewFile {
+          path: filePath
+          width: imageWidth
+          height: imageHeight
         }
         account {
           name: accountName
         }
       }
-      reply {
-        id: replyId
-        text: replyText
-        account {
-          name: accountName
-        }
+    }
+  }
+  flags {
+    id: flagId
+    name: flagName
+    text: flagText
+  }
+  bans {
+    name: banName
+    text: banText
+    accounts {
+      name: accountName
+    }
+  }
+  reactions {
+    name: reactionName
+    emoji: reactionEmoji
+    photos {
+      photoId
+      photoTitle
+    }
+    edits {
+      editId
+      editTitle
+    }
+    replies {
+      replyId
+      photo {
+        id: photoId
       }
-    }
-  }
-  tags {
-    tagId
-    tagName
-  }
-  cameras {
-    id: cameraId
-    model: cameraModel
-    manufacturer {
-      id: manufacturerId
-      name: manufacturerName
-    }
-  }
-  lenses {
-    id: lensId
-    model: lensModel
-    apertureMin
-    apertureMax
-    focalLengthMin
-    focalLengthMax
-    manufacturer {
-      id: manufacturerId
-      name: manufacturerName
-    }
-  }
-  manufacturers {
-    id: manufacturerId
-    name: manufacturerName
-    cameras {
-      id: cameraId
-      model: cameraModel
-    }
-    lenses {
-      id: lensId
-      model: lensModel
-    }
-  }
-  photos {
-    id: photoId
-    title: photoTitle
-    rawFilePath
-    rawFileSize
-    preview {
-      id: previewId
-      filePath: previewFilePath
-    }
-    account {
-      name: accountName
-    }
-  }
-  edits {
-    id: editId
-    title: editTitle
-    preview {
-      id: previewId
-      filePath: previewFilePath
-    }
-    account {
-      name: accountName
+      edit {
+        id: editId
+      }
     }
   }
 }

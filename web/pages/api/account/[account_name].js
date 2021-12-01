@@ -1,6 +1,11 @@
 import { FLASK_ENDPOINT } from 'config'
+import { fetchAccountDetails } from 'queries'
 
 export default function handler(req, res) {
+  if (req.method === 'GET') {
+    // if requestor has valid cookie for a session with account_name then:
+    return fetchAccountDetails({ accountName: req.query.account_name })
+  }
   if (!['POST', 'DELETE'].includes(req.method)) {
     return res.status(405).send('')
   }
@@ -9,7 +14,7 @@ export default function handler(req, res) {
     () => controller.abort(),
     FLASK_ENDPOINT.DEFAULT_TIMEOUT,
   )
-  return fetch(`${FLASK_ENDPOINT.BASE}/account/${req.query.account_id}`, {
+  return fetch(`${FLASK_ENDPOINT.BASE}/account/${req.query.account_name}`, {
     headers: {
       'Content-Type': 'application/json'
     },

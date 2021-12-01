@@ -7,22 +7,13 @@ from sqlalchemy.sql.functions import now
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-NAME_LENGTH  =   32
-TITLE_LENGTH =  100
-SHORT_TEXT   =  500
-LONG_TEXT    = 2500
 Base = declarative_base()
 
 AccountRole = Enum('admin', 'user', name='account_role')
-Misbehavior = Enum('other', 'impertinent', 'inappropriate', 'plagiarism', 'impersonation',
-                   'harmful', name='misbehavior')
 ContentType = Enum('photo', 'edit', 'reply', name='content_type')
-ReactionType    = Enum('agree', 'like', 'love', name='reaction_type')
-EventType  = Enum('submit_photo', 'submit_edit', 'submit_reply', 'submit_reaction',
+EventType   = Enum('submit_photo', 'submit_edit', 'submit_reply', 'submit_reaction', 'follow',
                    name='event_type')
-EventAssocation = Enum('subject', 'direct_object', 'indirect_object', name='event_association')
 Platform        = Enum('Android', 'iOS', 'Linux', 'macOS', 'Windows', name='platform')
-MediaCategory   = Enum('photo', 'edit', 'preview', name='media_category')
 
 AccountIdentity      = Identity('Account',      start= 100, cycle=True)
 PhotoIdentity        = Identity('Photo',        start= 200, cycle=True)
@@ -40,6 +31,11 @@ EventIdentity        = Identity('Event',        start=1300, cycle=True)
 NotificationIdentity = Identity('Notification', start=1400, cycle=True)
 FlagIdentity         = Identity('Flag',         start=1500, cycle=True)
 BanIdentity          = Identity('Ban',          start=1600, cycle=True)
+
+TEXT_SHORT     =   32
+TEXT_MEDIUM    =  100
+TEXT_LONG      =  500
+TEXT_VERY_LONG = 2500
 
 # Association tables
 
@@ -104,6 +100,8 @@ EditReply = Table(
 PhotoReaction = Table(
     'photo_reaction',
     Base.metadata,
+    Column('account_id', Integer, ForeignKey('account.account_id', onupdate='CASCADE',
+           ondelete='CASCADE'), primary_key=True),
     Column('reaction_id', Integer, ForeignKey('reaction.reaction_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True),
     Column('photo_id', Integer, ForeignKey('photo.photo_id', onupdate='CASCADE',
@@ -114,6 +112,8 @@ PhotoReaction = Table(
 EditReaction = Table(
     'edit_reaction',
     Base.metadata,
+    Column('account_id', Integer, ForeignKey('account.account_id', onupdate='CASCADE',
+           ondelete='CASCADE'), primary_key=True),
     Column('reaction_id', Integer, ForeignKey('reaction.reaction_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True),
     Column('edit_id', Integer, ForeignKey('edit.edit_id', onupdate='CASCADE',
@@ -124,6 +124,8 @@ EditReaction = Table(
 ReplyReaction = Table(
     'reply_reaction',
     Base.metadata,
+    Column('account_id', Integer, ForeignKey('account.account_id', onupdate='CASCADE',
+           ondelete='CASCADE'), primary_key=True),
     Column('reaction_id', Integer, ForeignKey('reaction.reaction_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True),
     Column('reply_id', Integer, ForeignKey('reply.reply_id', onupdate='CASCADE',
@@ -137,8 +139,7 @@ PhotoEvent = Table(
     Column('photo_id', Integer, ForeignKey('photo.photo_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True),
     Column('event_id', Integer, ForeignKey('event.event_id', onupdate='CASCADE',
-           ondelete='CASCADE'), primary_key=True),
-    Column('event_association', EventAssocation, nullable=False))
+           ondelete='CASCADE'), primary_key=True))
 
 """Which edits are related to which events"""
 EditEvent = Table(
@@ -147,8 +148,7 @@ EditEvent = Table(
     Column('edit_id', Integer, ForeignKey('edit.edit_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True),
     Column('event_id', Integer, ForeignKey('event.event_id', onupdate='CASCADE',
-           ondelete='CASCADE'), primary_key=True),
-    Column('event_association', EventAssocation, nullable=False))
+           ondelete='CASCADE'), primary_key=True))
 
 """Which replies are related to which events"""
 ReplyEvent = Table(
@@ -157,18 +157,7 @@ ReplyEvent = Table(
     Column('reply_id', Integer, ForeignKey('reply.reply_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True),
     Column('event_id', Integer, ForeignKey('event.event_id', onupdate='CASCADE',
-           ondelete='CASCADE'), primary_key=True),
-    Column('event_association', EventAssocation, nullable=False))
-
-"""Which reactions are related to which events"""
-ReactionEvent = Table(
-    'reaction_event',
-    Base.metadata,
-    Column('reaction_id', Integer, ForeignKey('reaction.reaction_id', onupdate='CASCADE',
-           ondelete='CASCADE'), primary_key=True),
-    Column('event_id', Integer, ForeignKey('event.event_id', onupdate='CASCADE',
-           ondelete='CASCADE'), primary_key=True),
-    Column('event_association', EventAssocation, nullable=False))
+           ondelete='CASCADE'), primary_key=True))
 
 """Who flagged which accounts"""
 AccountFlag = Table(
@@ -228,40 +217,24 @@ class Account(Base):
     __tablename__ = 'account'
     account_id = Column(Integer, AccountIdentity, primary_key=True)
     account_role = Column(AccountRole, nullable=False, default='user')
-    account_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
-    account_email = Column(String(SHORT_TEXT), unique=True, nullable=False)
-    preview_id = Column(
-        Integer,
-        ForeignKey('preview.preview_id', onupdate='CASCADE', ondelete='RESTRICT'))
-    verified_at = Column(DateTime)
+    account_name = Column(String(TEXT_SHORT), unique=True, nullable=False)
+    account_email = Column(String(TEXT_LONG), unique=True, nullable=False)
+    preview_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
+                             ondelete='RESTRICT'))
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, nullable=False, onupdate=now(), default=now())
     CheckConstraint(edited_at >= created_at)
-    preview = relationship('Preview', uselist=False, cascade='all,delete')
-    following = relationship(
-        'Account',
-        secondary=AccountFollow,
+    preview_file = relationship('File', uselist=False, cascade='all,delete')
+    following = relationship('Account', secondary=AccountFollow, backref='followers',
         primaryjoin=account_id == AccountFollow.c.following_id,
-        secondaryjoin=account_id == AccountFollow.c.follower_id,
-        backref='followers')
-    blocked = relationship(
-        'Account',
-        secondary=AccountBlock,
+        secondaryjoin=account_id == AccountFollow.c.follower_id)
+    blocked = relationship('Account', secondary=AccountBlock, backref='blocked_by',
         primaryjoin=account_id == AccountBlock.c.blocked_id,
-        secondaryjoin=account_id == AccountBlock.c.blocker_id,
-        backref='blocked_by')
-    bans = relationship(
-        'Ban',
-        secondary=AccountBan,
-        backref='accounts',
-        cascade='all,delete')
+        secondaryjoin=account_id == AccountBlock.c.blocker_id)
     flags = relationship(
-        'Flag',
-        secondary=AccountFlag,
-        backref='accounts',
-        primaryjoin=account_id == AccountFlag.c.flagged_account_id,
-        cascade='all,delete')
-    reactions = relationship('Reaction', backref='account', cascade='all,delete')
+        'Flag', secondary=AccountFlag, backref='accounts',
+        primaryjoin=account_id == AccountFlag.c.flagged_account_id)
+    bans = relationship('Ban', secondary=AccountBan, backref='accounts')
 
 class Photo(Base):
     """Photo table"""
@@ -269,38 +242,40 @@ class Photo(Base):
     photo_id = Column(Integer, PhotoIdentity, primary_key=True)
     account_id = Column(Integer, ForeignKey('account.account_id', onupdate='CASCADE',
                         ondelete='CASCADE'), nullable=False)
-    file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
-                     ondelete='RESTRICT'))
-    preview_id = Column(Integer, ForeignKey('preview.preview_id', onupdate='CASCADE',
-                        ondelete='RESTRICT'))
+    raw_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
+                         ondelete='RESTRICT'))
+    preview_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
+                             ondelete='RESTRICT'))
     camera_id = Column(Integer, ForeignKey('camera.camera_id', onupdate='CASCADE',
                        ondelete='RESTRICT'))
     lens_id = Column(Integer, ForeignKey('lens.lens_id', onupdate='CASCADE',
                      ondelete='RESTRICT'))
-    photo_title = Column(String(TITLE_LENGTH), nullable=False)
-    photo_description = Column(String(LONG_TEXT), nullable=False)
+    photo_title = Column(String(TEXT_MEDIUM), nullable=False)
+    photo_text = Column(String(TEXT_VERY_LONG), nullable=False)
     aperture = Column(Float)
     flash = Column(Boolean)
     focal_length = Column(Float)
     iso = Column(Integer)
+    lens_filter = Column(String(TEXT_MEDIUM), nullable=False)
     shutter_speed_denominator = Column(Integer)
     shutter_speed_numerator = Column(Integer)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, nullable=False, onupdate=now(), default=now())
-    CheckConstraint(file_id is not None or preview_id is not None)
-    CheckConstraint(photo_title is not None or photo_description is not None)
-    CheckConstraint(aperture > 0)
-    CheckConstraint(focal_length > 0)
-    CheckConstraint(iso > 0)
-    CheckConstraint(shutter_speed_denominator > 0)
-    CheckConstraint(shutter_speed_numerator > 0)
+    CheckConstraint(raw_file_id is not None or preview_id is not None)
+    CheckConstraint(photo_title != '' or photo_text != '')
+    CheckConstraint(aperture >= 0)
+    CheckConstraint(focal_length >= 0)
+    CheckConstraint(iso >= 0)
+    CheckConstraint(shutter_speed_denominator >= 0)
+    CheckConstraint(shutter_speed_numerator >= 0)
     CheckConstraint(edited_at >= created_at)
-    events = relationship('Event', secondary=PhotoEvent, backref='photos')
     account = relationship('Account', backref='photos', uselist=False)
-    file = relationship('File', backref='photo', uselist=False)
-    preview = relationship('Preview', backref='photo', uselist=False)
-    reactions = relationship('Reaction', secondary=PhotoReaction, backref='photo')
-    replies = relationship('Reply', secondary=PhotoReply, backref='photo')
+    raw_file = relationship('File', primaryjoin='Photo.raw_file_id == File.file_id',
+                            uselist=False, cascade='all,delete')
+    preview_file = relationship('File', primaryjoin='Photo.preview_file_id == File.file_id',
+                            uselist=False, cascade='all,delete')
+    reactions = relationship('Reaction', secondary=PhotoReaction, backref='photos', \
+                             cascade='all,delete', passive_deletes=True)
     camera = relationship('Camera', backref='photos')
     lens = relationship('Lens', backref='photos')
     tags = relationship('Tag', secondary=PhotoTag, backref='photos')
@@ -312,25 +287,27 @@ class Edit(Base):
     edit_id = Column(Integer, EditIdentity, primary_key=True)
     account_id = Column(Integer, ForeignKey('account.account_id', onupdate='CASCADE',
                         ondelete='CASCADE'), nullable=False)
-    file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
-                     ondelete='RESTRICT'))
-    preview_id = Column(Integer, ForeignKey('preview.preview_id', onupdate='CASCADE',
-                        ondelete='RESTRICT'))
+    sidecar_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
+                             ondelete='RESTRICT'))
+    preview_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
+                             ondelete='RESTRICT'))
     photo_id = Column(Integer, ForeignKey('photo.photo_id', onupdate='CASCADE',
                       ondelete='SET NULL'))
     editor_id = Column(ForeignKey('editor.editor_id', onupdate='CASCADE', ondelete='RESTRICT'))
-    edit_title = Column(String(TITLE_LENGTH), nullable=False)
-    edit_description = Column(String(LONG_TEXT), nullable=False)
+    edit_title = Column(String(TEXT_MEDIUM), nullable=False)
+    edit_text = Column(String(TEXT_VERY_LONG), nullable=False)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, nullable=False, onupdate=now(), default=now())
-    CheckConstraint(edit_title is not None or edit_description is not None)
+    CheckConstraint(sidecar_file_id is not None or preview_id is not None)
+    CheckConstraint(edit_title != '' or edit_text != '')
     CheckConstraint(edited_at >= created_at)
-    events = relationship('Event', secondary=EditEvent, backref='edits')
     account = relationship('Account', backref='edits', uselist=False)
-    file = relationship('File', backref='edit', uselist=False)
-    preview = relationship('Preview', backref='edit', uselist=False)
-    reactions = relationship('Reaction', secondary=EditReaction, backref='edit')
-    replies = relationship('Reply', secondary=EditReply, backref='edit')
+    sidecar_file = relationship('File', primaryjoin='Edit.sidecar_file_id == File.file_id',
+                                uselist=False, cascade='all,delete')
+    preview_file = relationship('File', primaryjoin='Edit.preview_file_id == File.file_id',
+                                uselist=False, cascade='all,delete')
+    reactions = relationship('Reaction', secondary=EditReaction, backref='edits', \
+                             cascade='all,delete', passive_deletes=True)
     photo = relationship('Photo', backref='edits', uselist=False)
     editor = relationship('Editor', backref='edits', uselist=False)
     flags = relationship('Flag', secondary=EditFlag, backref='edits')
@@ -341,59 +318,56 @@ class Reply(Base):
     reply_id = Column(Integer, ReplyIdentity, primary_key=True)
     account_id = Column(Integer, ForeignKey('account.account_id', onupdate='CASCADE',
                         ondelete='CASCADE'), nullable=False)
-    reply_text = Column(String(SHORT_TEXT), nullable=False)
+    reply_text = Column(String(TEXT_LONG), nullable=False)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, nullable=False, onupdate=now(), default=now())
     CheckConstraint(edited_at >= created_at)
-    events = relationship('Event', secondary=ReplyEvent, backref='replies')
     account = relationship('Account', backref='replies', uselist=False)
-    reactions = relationship('Reaction', secondary=ReplyReaction, backref='reply')
-    flags = relationship('Flag', secondary=ReplyFlag, backref='replies')
+    photo = relationship('Photo', secondary=PhotoReply, backref='replies', uselist=False)
+    edit = relationship('Edit', secondary=EditReply, backref='replies', uselist=False)
+    reactions = relationship('Reaction', secondary=ReplyReaction, backref='replies', uselist=False)
+    flags = relationship('Flag', secondary=ReplyFlag, backref='replies', uselist=False)
 
 class Reaction(Base):
-    """Reaction table"""
+    """
+    Reaction table
+
+    Each row contains informative data for a particular type of reaction, e.g. 'like', 'love',
+    or 'disagree'. Reactions are mapped per content type for each account as shown below:
+    - Photo  <---  PhotoReaction  --->  Account
+    - Edit   <---  EditReaction   --->  Account
+    - Reply  <---  ReplyReaction  --->  Account
+    """
     __tablename__ = 'reaction'
     reaction_id = Column(Integer, ReactionIdentity, primary_key=True)
-    account_id = Column(Integer, ForeignKey('account.account_id', onupdate='CASCADE',
-                        ondelete='CASCADE'), nullable=False)
-    reaction_type = Column(ReactionType, nullable=False, default='agree')
-    created_at = Column(DateTime, nullable=False, default=now())
-    events = relationship('Event', secondary=ReactionEvent, backref='reaction')
-
-class Preview(Base):
-    """Preview table"""
-    __tablename__ = 'preview'
-    preview_id = Column(Integer, PreviewIdentity, primary_key=True)
-    file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE', ondelete='CASCADE'),
-                     nullable=False)
-    preview_width = Column(Integer, nullable=False)
-    preview_height = Column(Integer, nullable=False)
-    CheckConstraint(preview_width > 0)
-    CheckConstraint(preview_height > 0)
-    file = relationship('File', backref='preview', uselist=False)
+    reaction_name = Column(String(TEXT_SHORT), nullable=False, unique=True)
+    reaction_emoji = Column(String(TEXT_SHORT))
 
 class File(Base):
     """File table used to track user uploads"""
     __tablename__ = 'file'
     file_id = Column(Integer, FileIdentity, primary_key=True)
     file_path = Column(String, nullable=False, unique=True)
-    file_name = Column(String(TITLE_LENGTH), nullable=False)
-    file_extension = Column(String, nullable=False)
-    file_size = Column(String, nullable=False)
-    media_category = Column(MediaCategory, nullable=False)
-    created_at = Column(String, nullable=False)
+    file_name = Column(String(TEXT_MEDIUM), nullable=False)
+    file_extension = Column(String(TEXT_SHORT), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    created_at = Column(String, nullable=False, default=now())
+    image_width = Column(Integer)
+    image_height = Column(Integer)
+    CheckConstraint(image_width > 0)
+    CheckConstraint(image_height > 0)
 
 class Tag(Base):
     """Tag table"""
     __tablename__ = 'tag'
     tag_id = Column(Integer, TagIdentity, primary_key=True)
-    tag_name = Column(String(NAME_LENGTH), unique=True, nullable=False)
+    tag_name = Column(String(TEXT_SHORT), unique=True, nullable=False)
 
 class Manufacturer(Base):
     """Manufacturer table"""
     __tablename__ = 'manufacturer'
     manufacturer_id = Column(Integer, ManufacturerIdentity, primary_key=True)
-    manufacturer_name = Column(String(TITLE_LENGTH), unique=True, nullable=False)
+    manufacturer_name = Column(String(TEXT_MEDIUM), unique=True, nullable=False)
 
 class Camera(Base):
     """Camera table"""
@@ -401,7 +375,7 @@ class Camera(Base):
     camera_id = Column(Integer, CameraIdentity, primary_key=True)
     manufacturer_id = Column(Integer, ForeignKey('manufacturer.manufacturer_id',
         onupdate='CASCADE', ondelete='RESTRICT'), nullable=False)
-    camera_model = Column(String(TITLE_LENGTH), nullable=False)
+    camera_model = Column(String(TEXT_MEDIUM), nullable=False)
     UniqueConstraint(camera_model, manufacturer_id)
     manufacturer = relationship('Manufacturer', backref='cameras')
 
@@ -410,15 +384,15 @@ class Lens(Base):
     __tablename__ = 'lens'
     lens_id = Column(Integer, LensIdentity, primary_key=True)
     manufacturer_id = Column(Integer, ForeignKey('manufacturer.manufacturer_id',
-        onupdate='CASCADE', ondelete='RESTRICT'), nullable=False)
-    lens_model = Column(String(TITLE_LENGTH), nullable=False)
+                             onupdate='CASCADE', ondelete='RESTRICT'), nullable=False)
+    lens_model = Column(String(TEXT_MEDIUM), nullable=False)
     aperture_min = Column(Float)
     aperture_max = Column(Float)
     focal_length_min = Column(Float)
     focal_length_max = Column(Float)
-    CheckConstraint(aperture_min > 0)
+    CheckConstraint(aperture_min >= 0)
     CheckConstraint(aperture_min <= aperture_max)
-    CheckConstraint(focal_length_min > 0)
+    CheckConstraint(focal_length_min >= 0)
     CheckConstraint(focal_length_min <= focal_length_max)
     UniqueConstraint(lens_model, manufacturer_id)
     manufacturer = relationship('Manufacturer', backref='lenses')
@@ -427,7 +401,7 @@ class Editor(Base):
     """Editor table"""
     __tablename__ = 'editor'
     editor_id = Column(Integer, EditorIdentity, primary_key=True)
-    editor_name = Column(String(TITLE_LENGTH), nullable=False)
+    editor_name = Column(String(TEXT_MEDIUM), nullable=False)
     editor_version = Column(String(20))
     editor_platform = Column(Platform)
     UniqueConstraint(editor_name, editor_version, editor_platform)
@@ -459,12 +433,18 @@ class Event(Base):
     account_id = Column(Integer, ForeignKey('account.account_id'), nullable=False)
     created_at = Column(DateTime, nullable=False, default=now())
     account = relationship('Account', backref='events', uselist=False)
+    photo = relationship('Photo', secondary=PhotoEvent, backref='events', uselist=False, \
+                         cascade='all,delete', passive_deletes=True)
+    edit = relationship('Edit', secondary=EditEvent, backref='events', uselist=False, \
+                         cascade='all,delete', passive_deletes=True)
+    reply = relationship('Reply', secondary=ReplyEvent, backref='events', uselist=False, \
+                         cascade='all,delete', passive_deletes=True)
 
 class Notification(Base):
     """
-    Who has seen which events
+    Who should be notified about which events, and when they viewed them
 
-    Rows are only inserted for creator accounts' followers at the time of posting
+    Rows are only inserted for the creator's followers at the time of posting
     """
     __tablename__ = 'notification'
     notification_id = Column(Integer, NotificationIdentity, primary_key=True)
@@ -474,22 +454,30 @@ class Notification(Base):
                       ondelete='CASCADE'))
     created_at = Column(DateTime, nullable=False, default=now())
     viewed_at = Column(DateTime)
-    account = relationship('Account', backref='notifications', uselist=False)
-    event = relationship('Event', uselist=False)
+    UniqueConstraint(account_id, event_id)
+    account = relationship('Account', backref='notifications', uselist=False, \
+                           cascade='all,delete', passive_deletes=True)
+    event = relationship('Event', uselist=False, cascade='all,delete', passive_deletes=True)
 
 class Flag(Base):
-    """Flag table"""
+    """
+    What are all the available flags in the app, e.g.:
+    impertinent, inappropriate, plagiarism, impersonation, harmful
+    """
     __tablename__ = 'flag'
     flag_id = Column(Integer, FlagIdentity, primary_key=True)
-    flag_reason = Column(Misbehavior, nullable=False)
-    flag_text = Column(String(SHORT_TEXT), nullable=False)
+    flag_name = Column(String(TEXT_SHORT), nullable=False)
+    flag_text = Column(String(TEXT_LONG), nullable=False)
     created_at = Column(DateTime, nullable=False, default=now())
 
 class Ban(Base):
-    """Ban table"""
+    """
+    What are all the available bans in the app, e.g.:
+    spamming, botting, plagiarism, impersonation, abuse
+    """
     __tablename__ = 'ban'
     ban_id = Column(Integer, BanIdentity, primary_key=True)
     created_at = Column(DateTime, nullable=False, default=now())
     expires_at = Column(DateTime)
-    ban_reason = Column(Misbehavior)
-    ban_text = Column(String(SHORT_TEXT), nullable=False)
+    ban_name = Column(String(TEXT_SHORT))
+    ban_text = Column(String(TEXT_LONG), nullable=False)

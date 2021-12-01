@@ -16,7 +16,7 @@ const EditForm = ({ className, edit = {}, setter = noop, onSubmit, fileSupport }
       <input
         type="text"
         name="description"
-        onChange={e => setter({ edit_description: e.currentTarget.value })}
+        onChange={e => setter({ edit_text: e.currentTarget.value })}
       />
     </label>
     <label>

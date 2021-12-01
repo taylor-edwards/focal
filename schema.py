@@ -10,7 +10,6 @@ from model import (
     Edit as EditModel,
     Reply as ReplyModel,
     Reaction as ReactionModel,
-    Preview as PreviewModel,
     File as FileModel,
     Tag as TagModel,
     Manufacturer as ManufacturerModel,
@@ -42,10 +41,6 @@ class Reply(SQLAlchemyObjectType):
 class Reaction(SQLAlchemyObjectType):
     class Meta:
         model = ReactionModel
-
-class Preview(SQLAlchemyObjectType):
-    class Meta:
-        model = PreviewModel
 
 class File(SQLAlchemyObjectType):
     class Meta:
@@ -90,13 +85,9 @@ class Ban(SQLAlchemyObjectType):
 class Query(ObjectType):
     """Query resolvers"""
     # pylint: disable=too-many-public-methods
-    account = Field(Account, account_id=Argument(type=ID), account_name=Argument(type=String))
-    def resolve_account(self, info, account_id=None, account_name=None):
-        """Query for account by ID"""
-        if account_id is not None:
-            return Account.get_query(info) \
-                          .filter(AccountModel.account_id == account_id) \
-                          .first()
+    account = Field(Account, account_name=Argument(type=String))
+    def resolve_account(self, info, account_name=None):
+        """Query for account by public name"""
         if account_name is not None:
             return Account.get_query(info) \
                           .filter(AccountModel.account_name == account_name) \
@@ -167,15 +158,10 @@ class Query(ObjectType):
         """Query for reaction by ID"""
         return Reaction.get_query(info).filter(ReactionModel.reaction_id == reaction_id).first()
 
-    reactions = List(Reaction, limit=Argument(type=Int), offset=Argument(type=Int),
-                  before=Argument(type=DateTime), after=Argument(type=DateTime))
-    def resolve_reactions(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
+    reactions = List(Reaction, limit=Argument(type=Int), offset=Argument(type=Int))
+    def resolve_reactions(self, info, limit=10, offset=0):
         """Query for all reactions by date"""
-        return Reactions.get_query(info) \
-                        .filter(ReactionModel.created_at < before) \
-                        .filter(ReactionModel.created_at >= after) \
-                        .limit(limit) \
-                        .offset(offset)
+        return Reaction.get_query(info).limit(limit).offset(offset)
 
     tag = Field(Tag, tag_id=Argument(type=ID, required=True))
     def resolve_tag(self, info, tag_id=None):
@@ -241,16 +227,6 @@ class Query(ObjectType):
                      .limit(limit) \
                      .offset(offset)
 
-    preview = Field(Preview, preview_id=Argument(type=ID, required=True))
-    def resolve_preview(self, info, preview_id=None):
-        """Query for preview by ID"""
-        return Preview.get_query(info).filter(PreviewModel.preview_id == preview_id).first()
-
-    previews = List(Preview, limit=Argument(type=Int), offset=Argument(type=Int))
-    def resolve_previews(self, info, limit=10, offset=0):
-        """Query for all previews"""
-        return Preview.get_query(info).limit(limit).offset(offset)
-
     file = Field(File, file_id=Argument(type=ID, required=True))
     def resolve_file(self, info, file_id=None):
         """Query for file by ID"""
@@ -313,9 +289,9 @@ class Query(ObjectType):
     def resolve_flags(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all flags"""
         return Flag.get_query(info) \
-                   .filter(FlagModel.edited_at < before) \
-                   .filter(FlagModel.edited_at >= after) \
-                   .order_by(FlagModel.edited_at.desc(), FlagModel.created_at.desc()) \
+                   .filter(FlagModel.created_at < before) \
+                   .filter(FlagModel.created_at >= after) \
+                   .order_by(FlagModel.created_at.desc()) \
                    .limit(limit) \
                    .offset(offset)
 
@@ -329,9 +305,9 @@ class Query(ObjectType):
     def resolve_bans(self, info, limit=10, offset=0, before=datetime.max, after=datetime.min):
         """Query for all bans"""
         return Ban.get_query(info) \
-                  .filter(BanModel.edited_at < before) \
-                  .filter(BanModel.edited_at >= after) \
-                  .order_by(BanModel.edited_at.desc(), BanModel.created_at.desc()) \
+                  .filter(BanModel.created_at < before) \
+                  .filter(BanModel.created_at >= after) \
+                  .order_by(BanModel.created_at.desc()) \
                   .limit(limit) \
                   .offset(offset)
 

@@ -10,7 +10,7 @@ export const authenticateAccount = ({ account_name, account_email }) =>
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ account_name, account_email }),
-    method: 'PUT',
+    method: 'POST',
   })
 
 export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {

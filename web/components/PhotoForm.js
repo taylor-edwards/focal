@@ -37,8 +37,8 @@ const PhotoForm = ({
         <input
           type="text"
           name="description"
-          value={photo.photo_description}
-          onChange={e => setter({ photo_description: e.currentTarget.value })}
+          value={photo.photo_text}
+          onChange={e => setter({ photo_text: e.currentTarget.value })}
         />
       </label>
 

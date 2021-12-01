@@ -99,13 +99,11 @@ penuser = select_account(engine, account_name='p3n15')
 
 try:
     if skeletor:
-        update_account(
-            engine, account_id=skeletor.account_id, account_role='admin', is_verified=True
-        )
+        update_account(engine, account_id=skeletor.account_id, account_role='admin')
     if nacho:
         update_account(engine, account_id=nacho.account_id, account_email='cheese@focal.pics')
     if eightball:
-        update_account(engine, account_id=eightball.account_id, is_verified=True)
+        update_account(engine, account_id=eightball.account_id)
 except Exception as err: # pylint: disable=broad-except
     print('Update account exception:', err)
 
@@ -175,7 +173,7 @@ try:
             photo_title='How much cheese is too much?'
         )
         if photo:
-            update_photo(engine, photo_id=photo.photo_id, photo_description='TOO MUCH!!!')
+            update_photo(engine, photo_id=photo.photo_id, photo_text='TOO MUCH!!!')
 except Exception as err: # pylint: disable=broad-except
     print('Update photo exception:', err)
 

@@ -1,7 +1,8 @@
 {
-    "upload_paths": ["web", "public", "uploads"],
+    "account_name_special_chars": [" ", ".", "-"],
+    "upload_path": ["web", "public", "uploads"],
     "preview_image_format": "jpg",
-    "preview_image_size": [2000, 2000],
+    "preview_image_size": [3000, 2000],
     "supported_file_extensions": {
         "raw_file": [
             "3fr",     // Hasselblad 3F RAW image

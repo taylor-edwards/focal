@@ -54,12 +54,12 @@ const lensFormState = () => ({
   lens_focal_length_max: null,
   lens_manufacturer_id: null,
   lens_manufacturer_name: '',
+  lens_filter: '',
 })
 
 const photoFormState = (account_name) => ({
-  account_name,
   photo_title: '',
-  photo_description: '',
+  photo_text: '',
   raw_file: null,
   preview_file: null,
   aperture: null,
@@ -72,12 +72,10 @@ const photoFormState = (account_name) => ({
   ...lensFormState(),
 })
 
-const editFormState = (account_name, photo_id = null) => ({
-  account_name,
-  photo_id,
+const editFormState = (account_name) => ({
   temp_id: Math.random().toString(16).substr(2),
   edit_title: '',
-  edit_description: '',
+  edit_text: '',
   edit_file: null,
   preview_file: null,
   editor_id: null,
@@ -90,7 +88,7 @@ const photoFormIsComplete = photo =>
   // input is not nullish
   photo &&
   // must have title or description
-  (photo.photo_title?.length > 0 || photo.photo_description?.length > 0) &&
+  (photo.photo_title?.length > 0 || photo.photo_text?.length > 0) &&
   // must include at least one file
   photo.preview_file != photo.raw_file
 
@@ -98,18 +96,18 @@ const editFormIsComplete = edit =>
   // input is not nullish
   edit &&
   // must have title or description
-  (edit.edit_title?.length > 0 || edit.edit_description?.length > 0) &&
+  (edit.edit_title?.length > 0 || edit.edit_text?.length > 0) &&
   // must include at least one file
   edit.preview_file != edit.edit_file
 
 const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
-  const accountName = 'nacho'
+  const [accountName, setAccountName] = useState('')
   const router = useRouter()
-  const [photo, setPhoto] = useState(photoFormState(accountName))
+  const [photo, setPhoto] = useState(photoFormState())
   const [edits, setEdits] = useState([])
 
   const addEdit = () => {
-    setEdits(e => e.concat(editFormState(accountName)))
+    setEdits(e => e.concat(editFormState()))
   }
 
   const deleteEdit = index =>
@@ -137,12 +135,16 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
       console.log('Edit form is incomplete!', photo, edits)
       return
     }
-    submitPhoto(photo)
+    submitPhoto({ ...photo, account_name: accountName })
       .then(response => response.json())
       .then(async ({ photoId }) => {
         if (photoId) {
           await Promise.all(edits.map(
-            edit => submitEdit({ photoId, ...edit }).then(noop, noop)
+            edit => submitEdit({
+              ...edit,
+              account_name: accountName,
+              photo_id: photoId,
+            }).then(noop, noop)
           ))
         }
         router.push(`/a/${accountName}/p/${photoId}`)
@@ -154,6 +156,15 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
 
   return (
     <main>
+      <label>
+        <p>Account</p>
+        <input
+          type="text"
+          name="account_name"
+          value={accountName}
+          onChange={e => setAccountName(e.currentTarget.value)}
+        />
+      </label>
       <PhotoForm
         photo={photo}
         setter={fields => setPhoto(p => ({ ...p, ...fields }))}

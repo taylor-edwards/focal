@@ -7,10 +7,10 @@ from model import (
     Camera,
     Edit,
     Editor,
+    File,
     Lens,
     Manufacturer,
     Photo,
-    Preview,
     Reply,
     Tag,
     Reaction
@@ -29,17 +29,35 @@ def select_account(engine, account_id=None, account_email=None, account_name=Non
 
 def create_account(engine, account_name, account_email, account_role='user'):
     """Create an account"""
+    if type(account_name) != 'str':
+        raise TypeError(f'Expected string for account_name, but got {type(account_name)}')
+    if len(account_name) < 2:
+        raise ValueError('Account name too short')
+    for char in account_name:
+        # require names to use the character sets A-z, 0-9, and (' ', ., -) exclusively
+        x = ord(char)
+        if not(65 <= x <=  90 or         # between A-Z \
+               97 <= x <= 122 or         # between a-z \
+               48 <= x <=  57 or         # between 0-9 \
+               char in config['account_name_special_chars']): # allowed character
+            # char is out of range
+            raise ValueError('Invalid character found in account name')
+    first_char_ord = ord(account_name[0])
+    if not 65 <= first_char_ord <= 90 and not 97 <= first_char_ord <= 122:
+       raise ValueError('Account name must start with a letter')
+    if account_name[-1] not in config['account_name_special_chars']:
+        raise ValueError('Account name must not end in punctuation')
     with Session(engine) as session:
         account = session.query(Account).filter_by(account_email=account_email).first()
         if account is not None:
-            raise Exception(f'Account email in use ({account_email})')
+            raise ValueError(f'Account email in use ({account_email})')
 
         account = session.query(Account).filter_by(account_name=account_name).first()
         if account is not None:
-            raise Exception(f'Account name in use ({account_name})')
+            raise ValueError(f'Account name in use ({account_name})')
 
         if account_role not in ('user', 'admin'):
-            raise Exception('Account role does not exist')
+            raise ValueError('Account role does not exist')
 
         account = Account(
             account_name=account_name,
@@ -56,8 +74,7 @@ def update_account(
     account_id,
     account_name=None,
     account_role=None,
-    account_email=None,
-    is_verified=None
+    account_email=None
 ):
     """Update an account"""
     # pylint: disable=too-many-arguments
@@ -80,9 +97,6 @@ def update_account(
                 raise Exception('Account role does not exist')
             account_updates['account_role'] = account_role
 
-        if is_verified is not None:
-            account_updates['verified_at'] = now() if is_verified else None
-
         session.query(Account).filter_by(account_id=account_id).update(account_updates)
         session.commit()
 
@@ -96,7 +110,7 @@ def delete_account(engine, account_id):
         else:
             raise Exception('Account not found')
 
-def select_photo(engine, photo_id=None, account_id=None, photo_title=None, preview_id=None):
+def select_photo(engine, photo_id=None, account_id=None, photo_title=None, preview_file_id=None):
     """Select a photo"""
     with Session(engine) as session:
         if photo_id is not None:
@@ -105,59 +119,28 @@ def select_photo(engine, photo_id=None, account_id=None, photo_title=None, previ
             return session.query(Photo) \
                           .filter_by(account_id=account_id, photo_title=photo_title) \
                           .first()
-        if preview_id is not None:
+        if preview_file_id is not None:
             return session.query(Photo) \
-                          .filter_by(preview_id=preview_id) \
+                          .filter_by(preview_file_id=preview_file_id) \
                           .first()
         return None
 
-def create_photo(
-    engine,
-    account_id,
-    photo_title,
-    preview_id=None,
-    camera_id=None,
-    lens_id=None,
-    photo_description=None,
-    raw_file_name=None,
-    raw_file_path=None,
-    raw_file_extension=None,
-    raw_file_size=None,
-    raw_width=None,
-    raw_height=None,
-    aperture=None,
-    flash=None,
-    focal_length=None,
-    iso=None,
-    shutter_speed_denominator=None,
-    shutter_speed_numerator=None
-):
+def create_photo(engine, account_id, raw_file_id=None, preview_file_id=None,
+                 camera_id=None, lens_id=None, photo_title='', photo_text='', aperture=None,
+                 flash=None, focal_length=None, iso=None, lens_filter='',
+                 shutter_speed_denominator=None, shutter_speed_numerator=None):
     """Create a photo"""
     # pylint: disable=too-many-arguments,too-many-locals
     with Session(engine) as session:
         photo = select_photo(engine, account_id=account_id, photo_title=photo_title)
         if photo is not None:
             raise Exception(f'Photo title in use by account ({photo_title}, {account_id})')
-        photo = Photo(
-            account_id=account_id,
-            photo_title=photo_title,
-            preview_id=preview_id,
-            camera_id=camera_id,
-            lens_id=lens_id,
-            photo_description=photo_description,
-            raw_file_name=raw_file_name,
-            raw_file_path=raw_file_path,
-            raw_file_extension=raw_file_extension,
-            raw_file_size=raw_file_size,
-            raw_width=raw_width,
-            raw_height=raw_height,
-            aperture=aperture,
-            flash=flash,
-            focal_length=focal_length,
-            iso=iso,
-            shutter_speed_denominator=shutter_speed_denominator,
-            shutter_speed_numerator=shutter_speed_numerator
-        )
+        photo = Photo(account_id=account_id, camera_id=camera_id, lens_id=lens_id,
+                      preview_file_id=preview_file_id, raw_file_id=raw_file_id, flash=flash,
+                      photo_title=photo_title, photo_text=photo_text, aperture=aperture,
+                      focal_length=focal_length, iso=iso, lens_filter=lens_filter,
+                      shutter_speed_denominator=shutter_speed_denominator,
+                      shutter_speed_numerator=shutter_speed_numerator)
         session.add(photo)
         session.commit()
         session.refresh(photo)
@@ -170,23 +153,9 @@ def update_photo(
 ):
     """Update a photo"""
     photo_property_list = [
-        'account_id',
-        'preview_id',
-        'camera_id',
-        'lens_id',
-        'photo_title',
-        'photo_description',
-        'raw_file_path',
-        'raw_file_extension',
-        'raw_file_size',
-        'raw_width',
-        'raw_height',
-        'aperture',
-        'flash',
-        'focal_length',
-        'iso',
-        'shutter_speed_denominator',
-        'shutter_speed_numerator'
+        'photo_title', 'photo_text', 'raw_file_id', 'preview_file_id',
+        'camera_id', 'lens_id', 'aperture', 'flash', 'focal_length', 'iso',
+        'shutter_speed_denominator', 'shutter_speed_numerator'
     ]
     photo_updates = {k: v for k, v in property_overrides.items() if k in photo_property_list}
     with Session(engine) as session:
@@ -221,10 +190,10 @@ def create_edit(
     engine,
     account_id,
     edit_title,
-    preview_id=None,
+    preview_file_id=None,
     photo_id=None,
     editor_id=None,
-    edit_description=None,
+    edit_text=None,
     edit_file_path=None,
     edit_file_extension=None,
     edit_file_size=None,
@@ -247,10 +216,10 @@ def create_edit(
         edit = Edit(
             account_id=account_id,
             edit_title=edit_title,
-            preview_id=preview_id,
+            preview_file_id=preview_file_id,
             photo_id=photo_id,
             editor_id=editor_id,
-            edit_description=edit_description,
+            edit_text=edit_text,
             edit_file_path=edit_file_path,
             edit_file_extension=edit_file_extension,
             edit_file_size=edit_file_size,
@@ -270,11 +239,11 @@ def update_edit(
     """Update an edit"""
     edit_property_list = [
         'account_id',
-        'preview_id',
+        'preview_file_id',
         'photo_id',
         'editor_id',
         'edit_title',
-        'edit_description',
+        'edit_text',
         'edit_file_path',
         'edit_file_extension',
         'edit_file_size',
@@ -375,51 +344,32 @@ def delete_reaction(engine, reaction_id):
         session.delete(reaction)
         session.commit()
 
-def create_preview(
-    engine,
-    preview_file_path,
-    preview_file_size,
-    preview_width,
-    preview_height
-):
-    """Create a preview"""
-    # pylint: disable=too-many-arguments
+def select_file(engine, file_id):
+    """Select a file"""
     with Session(engine) as session:
-        preview = Preview(
-            preview_file_path=preview_file_path,
-            preview_file_size=preview_file_size,
-            preview_width=preview_width,
-            preview_height=preview_height
-        )
-        session.add(preview)
-        session.commit()
-        session.refresh(preview)
-        return preview
+        if file_id is not None:
+            return session.query(File).filter_by(file_id=file_id).first()
+        return None
 
-def update_preview(
-    engine,
-    preview_id,
-    **property_overrides
-):
-    """Update a preview"""
-    preview_property_list = [
-        'preview_file_path',
-        'preview_file_size',
-        'preview_width',
-        'preview_height'
-    ]
-    preview_updates = {k: v for k, v in property_overrides if k in preview_property_list}
+def create_file(engine, file_path=None, file_name=None,
+                file_extension=None, file_size=0,
+                image_width=None, image_height=None):
+    """Create a file"""
     with Session(engine) as session:
-        session.query(Preview).filter_by(preview_id=preview_id).update(preview_updates)
+        file = File(file_path=file_path, file_name=file_name, file_extension=file_extension,
+                    file_size=file_size, image_width=image_width, image_height=image_height)
+        session.add(file)
         session.commit()
+        session.refresh(file)
+        return file
 
-def delete_preview(engine, preview_id):
-    """Delete a preview"""
+def delete_file(engine, file_id):
+    """Delete a file"""
     with Session(engine) as session:
-        preview = select_preview(engine, preview_id=preview_id)
-        if preview is None:
-            raise Exception(f'Preview not found ({preview_id})')
-        session.delete(preview)
+        file = select_file(engine, file_id)
+        if file is None:
+            raise Exception(f'File not found ({file_id})')
+        session.delete(file)
         session.commit()
 
 def select_tag(engine, tag_id):
