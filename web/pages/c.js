@@ -4,7 +4,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/router'
-import { PAGE_REVALIDATION_INTERVAL } from 'config'
 import { submitPhoto, submitEdit } from 'api'
 import Button from 'components/Button'
 import PhotoForm from 'components/PhotoForm'
@@ -16,25 +15,21 @@ export const getStaticProps = async context => {
   try {
     const { fetchManufacturers } = require('queries')
     const { fetchFileSupport } = require('api')
-    const mfrs = await fetchManufacturers()
-      .then(r => r.json())
-      .catch(err => console.error(err))
-    const fileSupport = await fetchFileSupport()
-      .then(r => r.json())
-      .catch(err => console.error(err))
+    const mfrs = await fetchManufacturers().then(r => r.json())
+    const fileSupport = await fetchFileSupport().then(r => r.json())
     return {
       props: {
         manufacturers: mfrs.data.manufacturers,
         fileSupport: fileSupport,
       },
-      revalidate: PAGE_REVALIDATION_INTERVAL,
+      revalidate: 600,
     }
   } catch (err) {
     console.warn('Caught error fetching manufacturers:', err)
   }
   return {
-    notFound: true,
-    revalidate: PAGE_REVALIDATION_INTERVAL,
+    props: {},
+    revalidate: 60,
   }
 }
 
@@ -57,7 +52,7 @@ const lensFormState = () => ({
   lens_filter: '',
 })
 
-const photoFormState = (account_name) => ({
+const photoFormState = () => ({
   photo_title: '',
   photo_text: '',
   raw_file: null,
@@ -72,7 +67,7 @@ const photoFormState = (account_name) => ({
   ...lensFormState(),
 })
 
-const editFormState = (account_name) => ({
+const editFormState = () => ({
   temp_id: Math.random().toString(16).substr(2),
   edit_title: '',
   edit_text: '',
@@ -101,7 +96,7 @@ const editFormIsComplete = edit =>
   edit.preview_file != edit.edit_file
 
 const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
-  const [accountName, setAccountName] = useState('')
+  const [safename, setSafename] = useState('')
   const router = useRouter()
   const [photo, setPhoto] = useState(photoFormState())
   const [edits, setEdits] = useState([])
@@ -135,19 +130,19 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
       console.log('Edit form is incomplete!', photo, edits)
       return
     }
-    submitPhoto({ ...photo, account_name: accountName })
+    submitPhoto({ ...photo, account_safename: safename })
       .then(response => response.json())
       .then(async ({ photoId }) => {
         if (photoId) {
           await Promise.all(edits.map(
             edit => submitEdit({
               ...edit,
-              account_name: accountName,
+              account_safename: safename,
               photo_id: photoId,
             }).then(noop, noop)
           ))
         }
-        router.push(`/a/${accountName}/p/${photoId}`)
+        router.push(`/a/${encodeURIComponent(safename)}/p/${encodeURIComponent(photoId)}`)
       })
       .catch(err => {
         console.warn('Caught error while submitting photo', err)
@@ -160,9 +155,9 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
         <p>Account</p>
         <input
           type="text"
-          name="account_name"
-          value={accountName}
-          onChange={e => setAccountName(e.currentTarget.value)}
+          name="account_safename"
+          value={safename}
+          onChange={e => setSafename(e.currentTarget.value)}
         />
       </label>
       <PhotoForm

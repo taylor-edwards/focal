@@ -9,14 +9,15 @@ const loginFormState = () => ({
   account_name: '',
 })
 
-const LoginForm = ({ onSubmit = noop }) => {
-  const [loginForm, setLoginForm] = useState(loginFormState())
+const SignupForm = ({ onSubmit = noop }) => {
+  const [loginForm, setSignupForm] = useState(loginFormState())
   const handleSubmit = e => {
     e.preventDefault()
     e.stopPropagation()
     authenticateAccount(loginForm)
       .then(response => response.json())
       .then(json => onSubmit(e, json))
+      .catch(console.log)
   }
   return (
     <form onSubmit={handleSubmit}>
@@ -27,7 +28,7 @@ const LoginForm = ({ onSubmit = noop }) => {
           type="text"
           name="account_name"
           value={loginForm.account_name}
-          onChange={e => setLoginForm(f => ({
+          onChange={e => setSignupForm(f => ({
             ...f,
             account_name: e.target.value,
           }))}
@@ -40,7 +41,7 @@ const LoginForm = ({ onSubmit = noop }) => {
           type="email"
           name="account_email"
           value={loginForm.account_email}
-          onChange={e => setLoginForm(f => ({
+          onChange={e => setSignupForm(f => ({
             ...f,
             account_email: e.target.value,
           }))}
@@ -51,4 +52,4 @@ const LoginForm = ({ onSubmit = noop }) => {
   )
 }
 
-export default LoginForm
+export default SignupForm

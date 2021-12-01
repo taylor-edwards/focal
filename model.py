@@ -218,6 +218,7 @@ class Account(Base):
     account_id = Column(Integer, AccountIdentity, primary_key=True)
     account_role = Column(AccountRole, nullable=False, default='user')
     account_name = Column(String(TEXT_SHORT), unique=True, nullable=False)
+    account_safename = Column(String(TEXT_SHORT), unique=True, nullable=False)
     account_email = Column(String(TEXT_LONG), unique=True, nullable=False)
     preview_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
                              ondelete='RESTRICT'))

@@ -37,6 +37,10 @@ export const fetchQuery = (name, query, variables = {}) => {
   })
 }
 
+const accountNameFields = `
+  name: accountName
+  safename: accountSafename`
+
 const previewFields = `
   path: filePath
   width: imageWidth
@@ -68,7 +72,7 @@ const commonPhotoFields = `
     title: editTitle
     createdAt
     account {
-      name: accountName
+      ${accountNameFields}
     }
     previewFile {
       ${previewFields}
@@ -79,7 +83,7 @@ const commonPhotoFields = `
     text: replyText
     createdAt
     account {
-      name: accountName
+      ${accountNameFields}
     }
   }`
 
@@ -100,7 +104,7 @@ const commonEditFields = `
     title: photoTitle
     createdAt
     account {
-      name: accountName
+      ${accountNameFields}
     }
     previewFile {
       ${previewFields}
@@ -111,7 +115,7 @@ const commonEditFields = `
     text: replyText
     createdAt
     account {
-      name: accountName
+      ${accountNameFields}
     }
   }`
 
@@ -122,7 +126,7 @@ const commonReplyFields = `
   editedAt`
 
 const commonAccountFields = `
-  name: accountName
+  ${accountNameFields}
   createdAt
   replies {
     ${commonReplyFields}
@@ -130,14 +134,14 @@ const commonAccountFields = `
       photoId
       photoTitle
       account {
-        name: accountName
+        ${accountNameFields}
       }
     }
     edit {
       editId
       editTitle
       account {
-        name: accountName
+        ${accountNameFields}
       }
     }
   }`
@@ -146,21 +150,21 @@ export const fetchAccounts = () => fetchQuery(
   'Accounts',
   `query Accounts {
     accounts {
-      name: accountName
+      ${accountNameFields}
     }
   }`
 )
 
-export const fetchAccount = ({ accountName }) => fetchQuery(
+export const fetchAccount = ({ accountSafename }) => fetchQuery(
   'PublicAccount',
-  `query PublicAccount($accountName: String) {
-    account(accountName: $accountName) {
+  `query PublicAccount($accountSafename: String) {
+    account(accountSafename: $accountSafename) {
       ${commonAccountFields}
       following {
-        name: accountName
+        ${accountNameFields}
       }
       followers {
-        name: accountName
+        ${accountNameFields}
       }
       photos {
         ${commonPhotoFields}
@@ -170,14 +174,14 @@ export const fetchAccount = ({ accountName }) => fetchQuery(
       }
     }
   }`,
-  { accountName },
+  { accountSafename },
 )
 
-export const fetchAccountDetails = ({ accountName }) => fetchQuery(
+export const fetchAccountDetails = ({ accountSafename }) => fetchQuery(
   'PrivateAccount',
-  `query PrivateAccount($accountName: String) {
-    account(accountName: $accountName) {
-      name: accountName
+  `query PrivateAccount($accountSafename: String) {
+    account(accountSafename: $accountSafename) {
+      ${accountNameFields}
       email: accountEmail
       role: accountRole
       createdAt
@@ -200,7 +204,7 @@ export const fetchAccountDetails = ({ accountName }) => fetchQuery(
         viewedAt
         event {
           account {
-            name: accountName
+            ${accountNameFields}
           }
           photo {
             id: photoId
@@ -244,6 +248,9 @@ export const fetchPhotos = (options = {}) => fetchQuery(
   `query Photos {
     photos {
       ${commonPhotoFields}
+      account {
+        ${accountNameFields}
+      }
     }
   }`,
   options,
@@ -263,7 +270,7 @@ export const fetchPhoto = photoId => fetchQuery(
       shutterSpeedDenominator
       shutterSpeedNumerator
       account {
-        name: accountName
+        ${accountNameFields}
         previewFile {
           ${previewFields}
         }
@@ -288,7 +295,7 @@ export const fetchPhoto = photoId => fetchQuery(
         }
       }
       account {
-        name: accountName
+        ${accountNameFields}
       }
       edits {
         title: editTitle
@@ -296,7 +303,7 @@ export const fetchPhoto = photoId => fetchQuery(
           ${previewFields}
         }
         account {
-          name: accountName
+          ${accountNameFields}
         }
       }
     }
@@ -326,7 +333,7 @@ export const fetchEdit = editId => fetchQuery(
         platform: editorPlatform
       }
       account {
-        name: accountName
+        ${accountNameFields}
       }
     }
   }`,

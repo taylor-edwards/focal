@@ -6,23 +6,31 @@ import { useRouter } from 'next/router'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
+  const { PAGE_REVALIDATION_INTERVAL } = require('config')
+  const { fetchAccount } = require('queries')
   try {
     // pre-render only public profile pages
-    const { fetchAccount } = require('queries')
-    const { PAGE_REVALIDATION_INTERVAL } = require('config')
-    const accountName = context.params?.account_name
-    const response = await fetchAccount({ accountName })
-    const json = await response.json()
+    const accountSafename = context.params?.account_safename
+    const response = await fetchAccount({ accountSafename }).then(r => r.json())
+    if (!response || response.data.account === null) {
+      throw new Error('Account not found')
+    }
     return {
-      props: json.data,
+      props: {
+        account: response.data.account,
+      },
       revalidate: PAGE_REVALIDATION_INTERVAL,
     }
   } catch (err) {
-    console.warn('Caught error fetching public account:', err)
-  }
-  return {
-    notFound: true,
-    revalidate: 60,
+    console.warn(
+      'Issuing 404 for account page',
+      JSON.stringify({ params: context.params }),
+      err.message,
+    )
+    return {
+      notFound: true,
+      revalidate: PAGE_REVALIDATION_INTERVAL,
+    }
   }
 }
 
@@ -30,13 +38,10 @@ export const getStaticPaths = async () => {
   try {
     const { fetchAccounts } = require('queries')
     const { PAGE_REVALIDATION_INTERVAL } = require('config')
-    const response = await fetchAccounts()
-    const json = await response.json()
-    const paths = json.data.accounts.map(
-      ({ accountName }) => `/a/${accountName}`,
-    )
+    const response = await fetchAccounts().then(r => r.json())
     return {
-      paths,
+      paths: response.data.accounts.map(
+        ({ accountSafename }) => `/a/${encodeURIComponent(accountSafename)}`),
       fallback: true,
     }
   } catch (err) {
@@ -54,42 +59,42 @@ const AccountPage = ({ account }) => {
     return <Loading />
   }
   // If logged in user is the same as account, fetch the account details via
-  // GET /api/a/{accountName} with a valid session cookie
+  // GET /api/a/{accountSafename} with a valid session cookie
   // Account page
   return (
     <div>
       <h1>Account</h1>
       {account && <p>{account.name}</p>}
-      {account?.email && <p>{account.email}</p>}
-      {account?.createdAt && (
+      {account.email && <p>{account.email}</p>}
+      {account.createdAt && (
         <p>Member since {new Date(account.createdAt).getFullYear()}</p>
       )}
-      {account?.photos && account.photos.length > 0 ? (
+      {account.photos && account.photos.length > 0 ? (
         <ul>
           <p className="subheading">Photos</p>
           {account.photos.map(photo => (
             <li key={photo.id}>
               <p>{photo.title}</p>
-              {photo?.preview && (
+              {photo.previewFile && (
                 <img
-                  src={photo.preview.filePath?.replace(/^.+(\/uploads\/[A-z0-9]+\.\w+)$/, '$1')}
-                  alt={photo.title ?? photo.description?.substr(0, 20) ?? ''}
-                  height={photo.preview.height}
-                  width={photo.preview.width}
+                  src={photo.previewFile.path.replace(/^.+(\/uploads\/[A-z0-9]+\.\w+)$/, '$1')}
+                  alt={photo.title ?? photo.text?.substr(0, 20) ?? ''}
+                  height={photo.previewFile.height}
+                  width={photo.previewFile.width}
                 />
               )}
             </li>
           ))}
         </ul>
       ) : null}
-      {account?.edits && account.edits.length > 0 ? (
+      {account.edits && account.edits.length > 0 ? (
         <>
           <p className="subheading">Edits</p>
           <ul>
             {account.edits.map(edit => (
               <li key={edit.id}>
                 <p>{edit.title}</p>
-                {edit.preview && <img src={edit.preview.filePath} />}
+                {edit.previewFile && <img src={edit.previewFile.path} />}
               </li>
             ))}
           </ul>

@@ -1,5 +1,5 @@
 {
-    "account_name_special_chars": [" ", ".", "-"],
+    "allowed_chars": " .,:;!?-*$&%",
     "upload_path": ["web", "public", "uploads"],
     "preview_image_format": "jpg",
     "preview_image_size": [3000, 2000],

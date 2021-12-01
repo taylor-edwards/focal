@@ -15,52 +15,62 @@ from model import (
     Tag,
     Reaction
 )
+import json5 as json
+import re
 
-def select_account(engine, account_id=None, account_email=None, account_name=None):
+# Load configuration
+with open('config.json', 'r') as f:
+    config = json.load(f)
+
+def select_account(engine, account_id=None, account_email=None, account_safename=None):
     """Select an account by ID"""
     with Session(engine) as session:
         if account_id is not None:
             return session.query(Account).filter_by(account_id=account_id).first()
         if account_email is not None:
             return session.query(Account).filter_by(account_email=account_email).first()
-        if account_name is not None:
-            return session.query(Account).filter_by(account_name=account_name).first()
+        if account_safename is not None:
+            return session.query(Account).filter_by(account_safename=account_safename).first()
         return None
 
 def create_account(engine, account_name, account_email, account_role='user'):
     """Create an account"""
-    if type(account_name) != 'str':
-        raise TypeError(f'Expected string for account_name, but got {type(account_name)}')
+    if not str.isascii(account_name):
+        raise TypeError(f'Expected string for account name, but got {type(account_name)}')
     if len(account_name) < 2:
         raise ValueError('Account name too short')
     for char in account_name:
-        # require names to use the character sets A-z, 0-9, and (' ', ., -) exclusively
+        # require names to use the character sets A-z, 0-9 and (allowed_chars) exclusively
         x = ord(char)
-        if not(65 <= x <=  90 or         # between A-Z \
-               97 <= x <= 122 or         # between a-z \
-               48 <= x <=  57 or         # between 0-9 \
-               char in config['account_name_special_chars']): # allowed character
-            # char is out of range
+        if not(65 <= x <=  90 or # between A-Z \
+               97 <= x <= 122 or # between a-z \
+               48 <= x <=  57 or # between 0-9 \
+               char in config['allowed_chars']):
             raise ValueError('Invalid character found in account name')
     first_char_ord = ord(account_name[0])
-    if not 65 <= first_char_ord <= 90 and not 97 <= first_char_ord <= 122:
-       raise ValueError('Account name must start with a letter')
-    if account_name[-1] not in config['account_name_special_chars']:
-        raise ValueError('Account name must not end in punctuation')
+    # use normalized "safename" in URLs and to improve overall uniqueness of account names
+    safename = re.sub(' +', '_', re.sub('[^A-Za-z0-9 ]', '', account_name)).lower()
+    if len(safename) < 2:
+        raise ValueError('Account name doesn\'t include enough letters and/or numbers')
     with Session(engine) as session:
         account = session.query(Account).filter_by(account_email=account_email).first()
         if account is not None:
-            raise ValueError(f'Account email in use ({account_email})')
+            raise ValueError('Account email in use')
 
         account = session.query(Account).filter_by(account_name=account_name).first()
         if account is not None:
-            raise ValueError(f'Account name in use ({account_name})')
+            raise ValueError('Account name in use')
+
+        account = session.query(Account).filter_by(account_safename=safename).first()
+        if account is not None:
+            raise ValueError('Account name not unique enough')
 
         if account_role not in ('user', 'admin'):
             raise ValueError('Account role does not exist')
 
         account = Account(
             account_name=account_name,
+            account_safename=safename,
             account_email=account_email,
             account_role=account_role
         )

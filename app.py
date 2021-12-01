@@ -182,18 +182,16 @@ def handle_account():
     if not str.isascii(name) or len(name) < 1:
         return 'Invalid name', 400
 
-    account = select_account(engine, account_name=name)
-    if account is None:
+    try:
         account_options = {
             'account_name': request.json['account_name'],
             'account_email': request.json['account_email']
         }
         if 'account_role' in request.json:
             account_options['account_role'] = request.json['account_role']
-        try:
-            account = create_account(engine, **account_options)
-        except ValueError as err:
-            return str(err), 400
+        account = create_account(engine, **account_options)
+    except ValueError as err:
+        return str(err), 400
     if account is None:
         return 'Error creating account', 500
 
@@ -201,14 +199,14 @@ def handle_account():
 
     # request.cookies.set('session', 'mysecurehash')
 
-    return jsonify({ 'accountName': account.account_name }), 201
+    return jsonify({ 'accountSafename': account.account_safename }), 201
 
-@app.route('/account/<account_name>', methods=['POST'])
-def handle_update_account(account_name):
+@app.route('/account/<account_safename>', methods=['POST'])
+def handle_update_account(account_safename):
     """Flask route for updating an account"""
     if account_options is None:
         return 'Bad request', 400
-    account = select_account(engine, account_name=account_name)
+    account = select_account(engine, account_safename=account_safename)
     if account is None:
         return 'Account not found', 404
     account_options = {}
@@ -217,16 +215,16 @@ def handle_update_account(account_name):
     if 'account_email' in request.json:
         account_options['account_email'] = request.json['account_email']
     if account_options != {}:
-        update_account(engine, account_id, **account_options)
+        update_account(engine, account.account_id, **account_options)
     return '', 200
 
-@app.route('/account/<account_name>', methods=['DELETE'])
-def handle_delete_account(account_name):
+@app.route('/account/<account_safename>', methods=['DELETE'])
+def handle_delete_account(account_safename):
     """Flask route for deleting an account"""
-    account = select_account(engine, account_name=account_name)
+    account = select_account(engine, account_safename=account_safename)
     if account is None:
         return 'Account not found', 404
-    delete_account(engine, account_id)
+    delete_account(engine, account.account_id)
     return '', 204
 
 @app.route('/photo', methods=['PUT'])
@@ -245,12 +243,12 @@ def handle_create_photo():
         if v != 'null':
             photo_options[key] = v
 
-    account = select_account(engine, account_name=photo_options['account_name'])
+    account = select_account(engine, account_safename=photo_options['account_safename'])
     if account is None:
         return 'Account not found', 404
-    # Replace account_name with account_id
+    # Replace account_safename with account_id
     photo_options['account_id'] = account.account_id
-    del_prop(photo_options, 'account_name')
+    del_prop(photo_options, 'account_safename')
 
     if ('photo_title' not in photo_options or len(photo_options['photo_title']) == 0) \
        and ('photo_text' not in photo_options or len(photo_options['photo_text']) == 0):

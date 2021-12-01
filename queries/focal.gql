@@ -2,6 +2,7 @@ query Focal {
   accounts {
     role: accountRole
     name: accountName
+    safename: accountSafename
     email: accountEmail
     createdAt
     editedAt

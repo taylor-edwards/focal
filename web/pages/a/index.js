@@ -6,15 +6,17 @@
 
 import { useRouter } from 'next/router'
 
-import LoginForm from 'components/LoginForm'
+import SignupForm from 'components/SignupForm'
 
 const LoginPage = () => {
   const router = useRouter()
   // if user is already authenticated, immediately redirect to /a/account_name
   return (
     <main>
-      <LoginForm
-        onSubmit={(_e, { accountName }) => router.push(`/a/${accountName}`)}
+      <SignupForm
+        onSubmit={(_e, { accountSafename }) =>
+          router.push(`/a/${encodeURIComponent(accountSafename)}`)
+        }
       />
     </main>
   )
