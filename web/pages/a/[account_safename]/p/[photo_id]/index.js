@@ -8,7 +8,6 @@ import Link from 'components/Link'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
-  const { PAGE_REVALIDATION_INTERVAL } = require('config')
   const { fetchPhoto } = require('queries')
   try {
     const { account_safename, photo_id } = context.params
@@ -21,7 +20,7 @@ export const getStaticProps = async context => {
       props: {
         photo: response.data.photo,
       },
-      revalidate: PAGE_REVALIDATION_INTERVAL,
+      revalidate: 60,
     }
   } catch (err) {
     console.warn(
@@ -31,18 +30,26 @@ export const getStaticProps = async context => {
     )
     return {
       notFound: true,
-      revalidate: PAGE_REVALIDATION_INTERVAL,
+      revalidate: 30,
     }
   }
 }
 
 export const getStaticPaths = async () => {
   const { fetchPhotos } = require('queries')
-  const response = await fetchPhotos().then(r => r.json())
-  return {
-    paths: response.data.photos.map(
-      p => `/a/${encodeURIComponent(p.account.safename)}/p/${p.id}`),
-    fallback: true,
+  try {
+    const response = await fetchPhotos().then(r => r.json())
+    return {
+      paths: response.data.photos.map(
+        p => `/a/${encodeURIComponent(p.account.safename)}/p/${p.id}`),
+      fallback: true,
+    }
+  } catch (err) {
+    console.warn('Caught error fetching photos for paths', err)
+    return {
+      paths: [],
+      fallback: true,
+    }
   }
 }
 

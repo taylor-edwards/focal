@@ -6,7 +6,6 @@ import { useRouter } from 'next/router'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
-  const { PAGE_REVALIDATION_INTERVAL } = require('config')
   const { fetchAccount } = require('queries')
   try {
     // pre-render only public profile pages
@@ -19,7 +18,7 @@ export const getStaticProps = async context => {
       props: {
         account: response.data.account,
       },
-      revalidate: PAGE_REVALIDATION_INTERVAL,
+      revalidate: 60,
     }
   } catch (err) {
     console.warn(
@@ -29,7 +28,7 @@ export const getStaticProps = async context => {
     )
     return {
       notFound: true,
-      revalidate: PAGE_REVALIDATION_INTERVAL,
+      revalidate: 30,
     }
   }
 }
@@ -37,7 +36,6 @@ export const getStaticProps = async context => {
 export const getStaticPaths = async () => {
   try {
     const { fetchAccounts } = require('queries')
-    const { PAGE_REVALIDATION_INTERVAL } = require('config')
     const response = await fetchAccounts().then(r => r.json())
     return {
       paths: response.data.accounts.map(

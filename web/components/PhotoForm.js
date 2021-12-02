@@ -12,8 +12,8 @@ const PhotoForm = ({
   photo,
   setter = noop,
   onSubmit,
-  manufacturers,
-  fileSupport,
+  manufacturers = [],
+  fileSupport = {},
 }) => {
   const [showDetails, setShowDetails] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
@@ -116,7 +116,7 @@ const PhotoForm = ({
           type="file"
           name="raw_file"
           onChange={e => setter({ raw_file: Array.from(e.currentTarget.files)[0] })}
-          accept={fileSupport.raw_file.map(ext => `.${ext}`)}
+          accept={fileSupport.raw_file?.map(ext => `.${ext}`)}
         />
       </label>
 
@@ -126,7 +126,7 @@ const PhotoForm = ({
           type="file"
           name="preview_file"
           onChange={e => setter({ preview_file: Array.from(e.currentTarget.files)[0] })}
-          accept={fileSupport.preview_file.map(ext => `.${ext}`)}
+          accept={fileSupport.preview_file?.map(ext => `.${ext}`)}
         />
       </label>
 
