@@ -1,7 +1,21 @@
 import styles from '../styles/Button.module.css'
 
-const Button = ({ children, className = '', type = 'button', ...props }) => (
-  <button type={type} className={`${styles.btn} ${className}`} {...props}>
+const Button = ({
+  appearance = 'button',
+  children,
+  className = '',
+  type = 'button',
+  ...props
+}) => (
+  <button
+    type={type}
+    className={`${
+        appearance === 'button' ? styles.btn : ''
+      } ${
+        appearance === 'link' ? styles.link : ''
+      } ${className}`}
+    {...props}
+  >
     {children}
   </button>
 )

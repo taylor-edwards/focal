@@ -3,9 +3,9 @@
  */
 
 import Head from 'next/head'
-import Link from '../components/Link'
-import Image from 'next/image'
-import styles from '../styles/Home.module.css'
+import Image from 'components/Image'
+import Link from 'components/Link'
+import styles from 'styles/Home.module.css'
 
 const HomePage = () => (
   <div className={styles.container}>
@@ -13,8 +13,17 @@ const HomePage = () => (
       <title>Focal</title>
       <meta name="description" content="Learn and share photography editing tips" />
     </Head>
-    <main className={styles.content}>
-      <h1>Focal</h1>
+    <nav className="nav">
+      <ul className="nav--links">
+        <li><Link href="/">Focal</Link></li>
+        <li><Link href="/p">Photo Feed</Link></li>
+        <li><Link href="/p">Edit Feed</Link></li>
+        <li><Link href="/c">Submit</Link></li>
+        <li><Link href="/a">Sign in</Link></li>
+      </ul>
+    </nav>
+    <main className="card">
+      <Image src="/focal.svg" className="logo" />
       <ul className={styles.table}>
         <li>
           <Link className={styles.row} href="/a">

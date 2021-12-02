@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import { id } from 'utils'
 import { submitPhoto, submitEdit } from 'api'
 import Button from 'components/Button'
 import PhotoForm from 'components/PhotoForm'
@@ -68,7 +69,7 @@ const photoFormState = () => ({
 })
 
 const editFormState = () => ({
-  temp_id: Math.random().toString(16).substr(2),
+  temp_id: id(),
   edit_title: '',
   edit_text: '',
   edit_file: null,
@@ -85,7 +86,7 @@ const photoFormIsComplete = photo =>
   // must have title or description
   (photo.photo_title?.length > 0 || photo.photo_text?.length > 0) &&
   // must include at least one file
-  photo.preview_file != photo.raw_file
+  photo.preview_file !== photo.raw_file
 
 const editFormIsComplete = edit =>
   // input is not nullish
@@ -93,7 +94,7 @@ const editFormIsComplete = edit =>
   // must have title or description
   (edit.edit_title?.length > 0 || edit.edit_text?.length > 0) &&
   // must include at least one file
-  edit.preview_file != edit.edit_file
+  edit.preview_file !== edit.edit_file
 
 const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
   const [safename, setSafename] = useState('')

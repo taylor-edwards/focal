@@ -1,18 +1,21 @@
 :root {
   --accent-fill: navy;
   --accent-text: wheat;
+  --accent-font: Montserrat;
+  --body-font: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  --medium-radius: 6px;
+  --small-radius: 3px;
 }
 
 html,
 body {
-  padding: 0;
+  background: url("/memphis.png");
+  font-family: var(--body-font);
+  font-size: 16px;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-}
-
-body {
-  padding: 20px 40px;
+  overflow: auto;
+  padding: 0;
 }
 
 ul,
@@ -22,21 +25,49 @@ ol {
   padding: 0;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}
+
 img {
   height: auto;
   max-width: 100%;
   width: auto;
 }
 
+a,
 button,
 input,
 textarea,
 select,
 option {
+  background: transparent;
+  border: 0;
   font: inherit;
   color: inherit;
   letter-spacing: inherit;
   line-height: inherit;
+  min-width: 0;
+  outline: 0;
+  text-decoration: none;
+  width: unset;
+}
+
+a,
+button,
+select {
+  cursor: pointer;
+}
+
+a:hover,
+a:focus {
+  color: #ccff4a;
 }
 
 .subheading {
@@ -51,4 +82,109 @@ option {
   grid-gap: 20px;
   overflow: auto;
   padding: 15px 0 20px;
+}
+
+.nav {
+  background: #000;
+  border-bottom: 1px solid #eee;
+  box-sizing: border-box;
+  color: #fff;
+  margin-bottom: 20px;
+  padding: 7px 20px 10px;
+  position: sticky;
+  top: 0;
+  width: 100vw;
+  margin: 0;
+}
+
+.nav--links {
+  display: flex;
+  grid-gap: 20px;
+}
+
+.card {
+  align-items: center;
+  background: #000;
+  border-bottom: 1px solid #eee;
+  border-top: 1px solid #eee;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  grid-gap: 20px;
+  max-width: 600px;
+  padding: 10px 20px 25px;
+  width: 100%;
+}
+
+.logo {
+  max-width: 300px;
+}
+
+.input {
+  background: #3a3a3a;
+  border-radius: var(--small-radius);
+  font-family: var(--body-font);
+  font-size: 1em;
+  letter-spacing: 0;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+}
+
+.input:focus {
+  outline: 2px solid #ccff4a;
+}
+
+.input:hover {
+  background: #444;
+}
+
+.input--label {
+  font-family: var(--accent-font);
+  font-size: 0.75em;
+  display: block;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.col {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  grid-gap: 15px;
+}
+
+.login-page {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 25px 0 100px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.copyright {
+  background: #000;
+  color: #eee;
+  border-radius: var(--small-radius);
+  display: inline-block;
+  font-size: 0.75em;
+  letter-spacing: 0.07em;
+  padding: 10px 15px 15px;
+  text-align: center;
+}
+
+.login-page--copyright {
+  position: absolute;
+  bottom: 0;
+}
+
+@media (min-width: 400px) {
+  .card {
+    border: 1px solid #eee;
+    border-radius: var(--medium-radius);
+    width: unset;
+  }
 }

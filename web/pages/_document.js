@@ -4,7 +4,14 @@ class Doc extends Document {
   render () {
     return (
       <Html>
-        <Head />
+        <Head>
+          <style>{`
+            html, body {
+              background: #000;
+              color: #fff;
+            }
+          `}</style>
+        </Head>
         <body>
           <Main />
           <NextScript />
