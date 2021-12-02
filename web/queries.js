@@ -250,6 +250,9 @@ export const fetchPhotos = (options = {}) => fetchQuery(
       ${commonPhotoFields}
       account {
         ${accountNameFields}
+        previewFile {
+          ${previewFields}
+        }
       }
     }
   }`,

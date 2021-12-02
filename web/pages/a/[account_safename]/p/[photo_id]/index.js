@@ -3,6 +3,8 @@
  */
 
 import { useRouter } from 'next/router'
+import Image from 'components/Image'
+import Link from 'components/Link'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
@@ -38,7 +40,8 @@ export const getStaticPaths = async () => {
   const { fetchPhotos } = require('queries')
   const response = await fetchPhotos().then(r => r.json())
   return {
-    paths: response.data.photos.map(p => `/a/${encodeURIComponent(p.account.safename)}/p/${p.id}`),
+    paths: response.data.photos.map(
+      p => `/a/${encodeURIComponent(p.account.safename)}/p/${p.id}`),
     fallback: true,
   }
 }
@@ -51,18 +54,20 @@ const PhotoPage = ({ photo }) => {
   return (
     <main>
       <h1>{photo.title ?? 'Photo'}</h1>
+      {photo.previewFile && <Image srcFile={photo.previewFile} />}
       <p>{photo.text}</p>
-      {photo.previewFile && (
-        <img
-          src={photo.previewFile.path?.replace(/^.+(\/uploads\/[A-z0-9]+\.\w+)$/, '$1')}
-          alt={photo.title ?? photo.text?.substr(0, 20) ?? ''}
-          height={photo.previewFile.height}
-          width={photo.previewFile.width}
-        />
-      )}
       {/* <ReactionForm /> */}
       {/* <ReplyForm /> */}
       {/* <EditForm /> */}
+      {photo.rawFile && (
+        <Link file={photo.rawFile}>&darr; Download .{photo.rawFile.ext.toUpperCase()}</Link>
+      )}
+      {/* Reactions */}
+      {/* Download raw */}
+      {/* Replies */}
+      {/* Add reply */}
+      {/* Edits */}
+      {/* Add edit */}
     </main>
   )
 }

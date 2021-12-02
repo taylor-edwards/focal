@@ -19,7 +19,7 @@ const HomePage = () => (
         <li>
           <Link className={styles.row} href="/a">
             <span>/a</span>
-            <span>Login</span>
+            <span>Signup</span>
           </Link>
         </li>
         <li>
