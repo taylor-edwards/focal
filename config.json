@@ -1,5 +1,5 @@
 {
-    "allowed_chars": " .,:;!?-*$&%",
+    "allowed_chars": " .,:;!?~_-$&%'\"",
     "upload_path": ["web", "public", "uploads"],
     "preview_image_format": "jpg",
     "preview_image_size": [3000, 2000],

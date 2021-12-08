@@ -78,6 +78,15 @@ PhotoTag = Table(
     Column('tag_id', ForeignKey('tag.tag_id', onupdate='CASCADE',
            ondelete='CASCADE'), primary_key=True))
 
+"""Which tags have been applied to which edits"""
+EditTag = Table(
+    'edit_tag',
+    Base.metadata,
+    Column('edit_id', ForeignKey('edit.edit_id', onupdate='CASCADE',
+           ondelete='CASCADE'), primary_key=True),
+    Column('tag_id', ForeignKey('tag.tag_id', onupdate='CASCADE',
+           ondelete='CASCADE'), primary_key=True))
+
 """Which replies are to which photos"""
 PhotoReply = Table(
     'photo_reply',
@@ -217,7 +226,9 @@ class Account(Base):
     __tablename__ = 'account'
     account_id = Column(Integer, AccountIdentity, primary_key=True)
     account_role = Column(AccountRole, nullable=False, default='user')
+    # TODO: allow all UTF-8 characaters in account_name and allow user to change it more frequently
     account_name = Column(String(TEXT_SHORT), unique=True, nullable=False)
+    # TODO: rename to account_safename to account_handle and allow user to specify it when signing up, but never change it
     account_safename = Column(String(TEXT_SHORT), unique=True, nullable=False)
     account_email = Column(String(TEXT_LONG), unique=True, nullable=False)
     preview_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
@@ -275,7 +286,7 @@ class Photo(Base):
                             uselist=False, cascade='all,delete')
     preview_file = relationship('File', primaryjoin='Photo.preview_file_id == File.file_id',
                             uselist=False, cascade='all,delete')
-    reactions = relationship('Reaction', secondary=PhotoReaction, backref='photos', \
+    reactions = relationship('Reaction', secondary=PhotoReaction, backref='photos',
                              cascade='all,delete', passive_deletes=True)
     camera = relationship('Camera', backref='photos')
     lens = relationship('Lens', backref='photos')
@@ -307,10 +318,11 @@ class Edit(Base):
                                 uselist=False, cascade='all,delete')
     preview_file = relationship('File', primaryjoin='Edit.preview_file_id == File.file_id',
                                 uselist=False, cascade='all,delete')
-    reactions = relationship('Reaction', secondary=EditReaction, backref='edits', \
-                             cascade='all,delete', passive_deletes=True)
     photo = relationship('Photo', backref='edits', uselist=False)
     editor = relationship('Editor', backref='edits', uselist=False)
+    reactions = relationship('Reaction', secondary=EditReaction, backref='edits',
+                             cascade='all,delete', passive_deletes=True)
+    tags = relationship('Tag', secondary=EditTag, backref='edits')
     flags = relationship('Flag', secondary=EditFlag, backref='edits')
 
 class Reply(Base):
@@ -326,8 +338,8 @@ class Reply(Base):
     account = relationship('Account', backref='replies', uselist=False)
     photo = relationship('Photo', secondary=PhotoReply, backref='replies', uselist=False)
     edit = relationship('Edit', secondary=EditReply, backref='replies', uselist=False)
-    reactions = relationship('Reaction', secondary=ReplyReaction, backref='replies', uselist=False)
-    flags = relationship('Flag', secondary=ReplyFlag, backref='replies', uselist=False)
+    reactions = relationship('Reaction', secondary=ReplyReaction, backref='replies')
+    flags = relationship('Flag', secondary=ReplyFlag, backref='replies')
 
 class Reaction(Base):
     """
@@ -434,11 +446,11 @@ class Event(Base):
     account_id = Column(Integer, ForeignKey('account.account_id'), nullable=False)
     created_at = Column(DateTime, nullable=False, default=now())
     account = relationship('Account', backref='events', uselist=False)
-    photo = relationship('Photo', secondary=PhotoEvent, backref='events', uselist=False, \
+    photo = relationship('Photo', secondary=PhotoEvent, backref='events', uselist=False,
                          cascade='all,delete', passive_deletes=True)
-    edit = relationship('Edit', secondary=EditEvent, backref='events', uselist=False, \
+    edit = relationship('Edit', secondary=EditEvent, backref='events', uselist=False,
                          cascade='all,delete', passive_deletes=True)
-    reply = relationship('Reply', secondary=ReplyEvent, backref='events', uselist=False, \
+    reply = relationship('Reply', secondary=ReplyEvent, backref='events', uselist=False,
                          cascade='all,delete', passive_deletes=True)
 
 class Notification(Base):
@@ -456,7 +468,7 @@ class Notification(Base):
     created_at = Column(DateTime, nullable=False, default=now())
     viewed_at = Column(DateTime)
     UniqueConstraint(account_id, event_id)
-    account = relationship('Account', backref='notifications', uselist=False, \
+    account = relationship('Account', backref='notifications', uselist=False,
                            cascade='all,delete', passive_deletes=True)
     event = relationship('Event', uselist=False, cascade='all,delete', passive_deletes=True)
 
