@@ -8,10 +8,10 @@
 
 .btn {
   appearance: none;
-  background: #ccff4a;
+  background: var(--chartreuse-1);
   border-radius: var(--small-radius);
   border: 0;
-  box-shadow: 0 3px 0 -1px #88cc18;
+  box-shadow: 0 3px 0 -1px var(--chartreuse-2);
   color: #000;
   cursor: pointer;
   display: block;
@@ -23,13 +23,12 @@
 
 .btn:not(:disabled):hover,
 .btn:not(:disabled):focus {
-  background: #aaee33;
-  box-shadow: 0 3px 0 -1px #77bb14;
+  background: var(--chartreuse-2);
+  box-shadow: 0 3px 0 -1px var(--chartreuse-3);
 }
 
 .btn:not(:disabled):active {
-  background: #88cc22;
-  box-shadow: 0 3px 0 -1px #88aa08;
+  background: var(--chartreuse-3);
   color: #333;
 }
 
@@ -50,16 +49,16 @@
 }
 
 .link {
-  color: #ccff4a;
+  color: var(--chartreuse-1);
 }
 
 .link:not(:disabled):hover,
 .link:not(:disabled):focus {
-  color: #aaee33;
+  color: var(--chartreuse-2);
 }
 
 .link:not(:disabled):active {
-  color: #88cc22;
+  color: var(--chartreuse-3);
 }
 
 .link:disabled {

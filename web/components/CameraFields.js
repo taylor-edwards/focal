@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import Button from 'components/Button'
+import Input from 'components/Input'
+import Label from 'components/Label'
 
 const noop = () => {}
 
@@ -11,6 +14,7 @@ const valueOrNull = value =>
 //   typeof value === 'string' && string.length > 0 ? value : null
 
 const CameraFields = ({ fields, manufacturers, setter = noop }) => {
+  const [showCameraForm, setShowCameraForm] = useState(false)
   const selectCameraManufacturer = e => setter({
     camera_manufacturer_id: valueOrNull(e.currentTarget.value),
     camera_manufacturer_name: '',
@@ -33,54 +37,62 @@ const CameraFields = ({ fields, manufacturers, setter = noop }) => {
   }
   return (
     <>
-      <div>
-        <p>Camera manufacturer</p>
-        <select
-          value={fields.camera_manufacturer_id ?? nullishOption}
-          onChange={selectCameraManufacturer}
-          disabled={fields.camera_manufacturer_id === null &&
-            fields.camera_manufacturer_name !== ''}
-        >
-          <option value={null}>{nullishOption}</option>
-          {manufacturers.map(({ id, name }) => (
-            <option key={id} value={id}>{name}</option>
-          ))}
-        </select>
-        <input
-          type="text"
-          value={fields.camera_manufacturer_name}
-          onChange={e => setter({
-            camera_manufacturer_id: null,
-            camera_manufacturer_name: e.currentTarget.value,
-          })}
-        />
-      </div>
+      {!showCameraForm && <Input
+        label="Select camera body"
+        type="select"
+        value={fields.camera_manufacturer_id}
+        onChange={selectCameraManufacturer}
+        disabled={fields.camera_manufacturer_id === null &&
+          fields.camera_manufacturer_name !== ''}
+      >
+        {manufacturers.map(({ id, name }) => (
+          <option key={id} value={id}>{name}</option>
+        ))}
+      </Input>}
 
-      <div>
-        <p>Camera body</p>
-        <select
-          value={fields.camera_id ?? nullishOption}
-          onChange={selectCameraBody}
-          disabled={fields.camera_id === null && fields.camera_model !== ''}
-        >
-          <option value={null}>{nullishOption}</option>
-          {manufacturers
-            .filter(({ id }) =>
-              fields.camera_manufacturer_id === null || id === fields.camera_manufacturer_id
-            )
-            .map(({ cameras }) => cameras.map(
-              ({ id, model }) => <option key={id} value={id}>{model}</option>
-            ))}
-        </select>
-        <input
-          type="text"
-          value={fields.camera_model}
-          onChange={e => setter({
-            camera_id: null,
-            camera_model: e.currentTarget.value,
-          })}
-        />
-      </div>
+      {showCameraForm && (
+        <>
+          <Input
+            label="New camera name"
+            type="text"
+            value={fields.camera_model}
+            onChange={e => setter({
+              camera_id: null,
+              camera_model: e.currentTarget.value,
+            })}
+          />
+
+          <Input
+            label="Select camera manufacturer"
+            type="select"
+            value={fields.camera_id}
+            onChange={selectCameraBody}
+            disabled={fields.camera_id === null && fields.camera_model !== ''}
+          >
+            {manufacturers
+              .filter(({ id }) =>
+                fields.camera_manufacturer_id === null || id === fields.camera_manufacturer_id
+              )
+              .map(({ cameras }) => cameras.map(
+                ({ id, model }) => <option key={id} value={id}>{model}</option>
+              ))}
+          </Input>
+
+          <Input
+            label="Add manufacturer for camera body"
+            type="text"
+            value={fields.camera_manufacturer_name}
+            onChange={e => setter({
+              camera_manufacturer_id: null,
+              camera_manufacturer_name: e.currentTarget.value,
+            })}
+          />
+        </>
+      )}
+
+      <Button onClick={() => setShowCameraForm(!showCameraForm)}>
+        {showCameraForm ? 'Remove camera body' : 'Add camera body'}
+      </Button>
     </>
   )
 }

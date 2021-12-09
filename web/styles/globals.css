@@ -1,16 +1,174 @@
+/* ExtraLight */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 100;
+  font-style: normal;
+  src: url(/fonts/Montserrat-ExtraLight.woff2) format("woff2");
+}
+
+/* ExtraLightItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 100;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-ExtraLightItalic.woff2) format("woff2");
+}
+
+/* Thin */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 200;
+  font-style: normal;
+  src: url(/fonts/Montserrat-Thin.woff2) format("woff2");
+}
+
+/* ThinItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 200;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-ThinItalic.woff2) format("woff2");
+}
+
+/* Light */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 300;
+  font-style: normal;
+  src: url(/fonts/Montserrat-Light.woff2) format("woff2");
+}
+
+/* LightItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 300;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-LightItalic.woff2) format("woff2");
+}
+
+/* Regular */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-style: normal;
+  src: url(/fonts/Montserrat-Regular.woff2) format("woff2");
+}
+
+/* Italic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 400;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-Italic.woff2) format("woff2");
+}
+
+/* Medium */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: normal;
+  src: url(/fonts/Montserrat-Medium.woff2) format("woff2");
+}
+
+/* MediumItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 500;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-MediumItalic.woff2) format("woff2");
+}
+
+/* SemiBold */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: normal;
+  src: url(/fonts/Montserrat-SemiBold.woff2) format("woff2");
+}
+
+/* SemiBoldItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 600;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-SemiBoldItalic.woff2) format("woff2");
+}
+
+/* Bold */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 700;
+  font-style: normal;
+  src: url(/fonts/Montserrat-Bold.woff2) format("woff2");
+}
+
+/* BoldItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 700;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-BoldItalic.woff2) format("woff2");
+}
+
+/* ExtraBold */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 800;
+  font-style: normal;
+  src: url(/fonts/Montserrat-ExtraBold.woff2) format("woff2");
+}
+
+/* ExtraBoldItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 800;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-ExtraBoldItalic.woff2) format("woff2");
+}
+
+/* Black */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 900;
+  font-style: normal;
+  src: url(/fonts/Montserrat-Black.woff2) format("woff2");
+}
+
+/* BlackItalic */
+@font-face {
+  font-family: Montserrat;
+  font-weight: 900;
+  font-style: oblique;
+  src: url(/fonts/Montserrat-BlackItalic.woff2) format("woff2");
+}
+
+
 :root {
-  --accent-fill: navy;
-  --accent-text: wheat;
-  --accent-font: Montserrat;
   --body-font: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  --accent-font: Montserrat, var(--body-font);
   --medium-radius: 6px;
   --small-radius: 3px;
+
+  --mauve-1: #dca1ff;
+  --mauve-2: #ac72cd;
+  --mauve-3: #8d45b9;
+  --azure-1: #98d5fb;
+  --azure-2: #66aad3;
+  --azure-3: #3c8cbe;
+  --chartreuse-1: #ccff4a;
+  --chartreuse-2: #98d62b;
+  --chartreuse-3: #66a706;
+  --peach-1: #ffa07a;
+  --peach-2: #e97b4e;
+  --peach-3: #b65833;
+  --red-1: #ff5d72;
+  --red-2: #de3b50;
+  --red-3: #b0283a;
 }
 
 html,
 body {
-  background: url("/memphis.png");
   font-family: var(--body-font);
   font-size: 16px;
   margin: 0;
@@ -103,48 +261,19 @@ a:focus {
 }
 
 .card {
-  align-items: center;
   background: #000;
   border-bottom: 1px solid #eee;
   border-top: 1px solid #eee;
   color: #fff;
   display: flex;
   flex-direction: column;
-  grid-gap: 20px;
+  margin: 20px 0;
   max-width: 600px;
+  min-width: 300px;
+  overflow: hidden;
   padding: 10px 20px 25px;
+  position: relative;
   width: 100%;
-}
-
-.logo {
-  max-width: 300px;
-}
-
-.input {
-  background: #3a3a3a;
-  border-radius: var(--small-radius);
-  font-family: var(--body-font);
-  font-size: 1em;
-  letter-spacing: 0;
-  margin-bottom: 20px;
-  padding: 8px 12px;
-}
-
-.input:focus {
-  outline: 2px solid #ccff4a;
-}
-
-.input:hover {
-  background: #444;
-}
-
-.input--label {
-  font-family: var(--accent-font);
-  font-size: 0.75em;
-  display: block;
-  letter-spacing: 0.08em;
-  margin-bottom: 10px;
-  text-transform: uppercase;
 }
 
 .col {
@@ -171,14 +300,24 @@ a:focus {
   border-radius: var(--small-radius);
   display: inline-block;
   font-size: 0.75em;
+  left: 50%;
   letter-spacing: 0.07em;
+  margin: 100px 0 0;
   padding: 10px 15px 15px;
+  position: absolute;
   text-align: center;
+  transform: translateX(-50%);
 }
 
-.login-page--copyright {
+button.close-btn {
+  font-family: var(--accent-font);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 30px;
+  margin: 3px;
   position: absolute;
-  bottom: 0;
+  top: 0;
+  right: 0;
 }
 
 @media (min-width: 400px) {

@@ -1,0 +1,22 @@
+.input {
+  background: #3a3a3a;
+  border-radius: var(--small-radius);
+  font-family: var(--body-font);
+  font-size: 1em;
+  letter-spacing: 0;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+}
+
+.input:focus {
+  outline: 2px solid #ccff4a;
+}
+
+.input:hover {
+  background: #444;
+}
+
+.inputLabel {
+  display: block;
+  margin-bottom: 10px;
+}

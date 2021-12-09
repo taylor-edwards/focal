@@ -7,8 +7,10 @@ import { useRouter } from 'next/router'
 import { id } from 'utils'
 import { submitPhoto, submitEdit } from 'api'
 import Button from 'components/Button'
-import PhotoForm from 'components/PhotoForm'
-import EditForm from 'components/EditForm'
+import Copyright from 'components/Copyright'
+import Input from 'components/Input'
+import PhotoFields from 'components/PhotoFields'
+import EditFields from 'components/EditFields'
 
 const noop = () => {}
 
@@ -70,14 +72,7 @@ const photoFormState = () => ({
 
 const editFormState = () => ({
   temp_id: id(),
-  edit_title: '',
-  edit_text: '',
-  edit_file: null,
-  preview_file: null,
-  editor_id: null,
-  editor_name: '',
-  editor_version: '',
-  editor_platform: '',
+  ...EditFields.inputs
 })
 
 const photoFormIsComplete = photo =>
@@ -97,7 +92,6 @@ const editFormIsComplete = edit =>
   edit.preview_file !== edit.edit_file
 
 const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
-  const [safename, setSafename] = useState('')
   const router = useRouter()
   const [photo, setPhoto] = useState(photoFormState())
   const [edits, setEdits] = useState([])
@@ -151,39 +145,41 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
   }
 
   return (
-    <main>
-      <label>
-        <p>Account</p>
-        <input
-          type="text"
-          name="account_safename"
-          value={safename}
-          onChange={e => setSafename(e.currentTarget.value)}
-        />
-      </label>
-      <PhotoForm
-        photo={photo}
-        setter={fields => setPhoto(p => ({ ...p, ...fields }))}
-        manufacturers={manufacturers}
-        onSubmit={onSubmit}
-        fileSupport={fileSupport}
-      />
-      <ul className="flex-row">
-        {edits.map((edit, index) => (
-          <li key={edit.temp_id}>
-            <Button onClick={() => deleteEdit(index)}>&times; Delete edit</Button>
-            <EditForm
-              edit={edit}
-              setter={setEdit(index)}
-              fileSupport={fileSupport}
-            />
-          </li>
-        ))}
-      </ul>
-      <Button onClick={addEdit}>
-        + Add edit
-      </Button>
-    </main>
+    <>
+      <main>
+        <form onSubmit={onSubmit}>
+          <PhotoFields
+            photo={photo}
+            setter={fields => setPhoto(p => ({ ...p, ...fields }))}
+            manufacturers={manufacturers}
+            fileSupport={fileSupport}
+          />
+          <ul className="flex-row">
+            {edits.map((edit, index) => (
+              <li key={edit.temp_id} className="card">
+                <Button
+                  title="Delete edit"
+                  appearance="link"
+                  className="close-btn"
+                  onClick={() => deleteEdit(index)}
+                >
+                  &times;
+                </Button>
+                <EditFields
+                  edit={edit}
+                  setter={setEdit(index)}
+                  fileSupport={fileSupport}
+                />
+              </li>
+            ))}
+          </ul>
+          <Button onClick={addEdit}>
+            + Add edit
+          </Button>
+        </form>
+      </main>
+      <Copyright />
+    </>
   )
 }
 

@@ -1,0 +1,6 @@
+.label {
+  font-family: var(--accent-font);
+  font-size: 0.75em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
