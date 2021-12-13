@@ -11,7 +11,7 @@ export const getStaticProps = async context => {
   const { fetchPhoto } = require('queries')
   try {
     const { account_safename, photo_id } = context.params
-    const response = await fetchPhoto(photo_id).then(r => r.json())
+    const response = await fetchPhoto(photo_id)
     if (account_safename !== response.data.photo.account.safename) {
       // just because the photo exists doesn't mean it belongs to this account
       throw new Error('Account names do not match')
@@ -38,7 +38,7 @@ export const getStaticProps = async context => {
 export const getStaticPaths = async () => {
   const { fetchPhotos } = require('queries')
   try {
-    const response = await fetchPhotos().then(r => r.json())
+    const response = await fetchPhotos()
     return {
       paths: response.data.photos.map(
         p => `/a/${encodeURIComponent(p.account.safename)}/p/${p.id}`),

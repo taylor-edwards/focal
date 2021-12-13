@@ -10,7 +10,7 @@ export const getStaticProps = async context => {
   try {
     // pre-render only public profile pages
     const accountSafename = context.params?.account_safename
-    const response = await fetchAccount({ accountSafename }).then(r => r.json())
+    const response = await fetchAccount({ accountSafename })
     if (!response || response.data.account === null) {
       throw new Error('Account not found')
     }
@@ -36,7 +36,7 @@ export const getStaticProps = async context => {
 export const getStaticPaths = async () => {
   try {
     const { fetchAccounts } = require('queries')
-    const response = await fetchAccounts().then(r => r.json())
+    const response = await fetchAccounts()
     return {
       paths: response.data.accounts.map(
         ({ accountSafename }) => `/a/${encodeURIComponent(accountSafename)}`),

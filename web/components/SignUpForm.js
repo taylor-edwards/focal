@@ -1,34 +1,39 @@
 import { useState } from 'react'
-import { authenticateAccount } from 'api'
+import { noop } from 'utils'
+import { createAccount } from 'api'
 import Button from 'components/Button'
 import Input from 'components/Input'
-
-const noop = () => {}
 
 const loginFormState = () => ({
   account_email: '',
   account_name: '',
 })
 
-const SignupForm = ({ className = '', onSubmit = noop }) => {
-  const [loginForm, setSignupForm] = useState(loginFormState())
+const SignUpForm = ({
+  className,
+  onSubmit = noop,
+  onSuccess = noop,
+  onFailure = console.warn,
+}) => {
+  const [loginForm, setSignUpForm] = useState(loginFormState())
   const handleSubmit = e => {
+    onSubmit(e)
     e.preventDefault()
     e.stopPropagation()
-    authenticateAccount(loginForm)
-      .then(response => response.json())
-      .then(json => onSubmit(e, json))
-      .catch(console.log)
+    createAccount(loginForm)
+      .then(onSuccess)
+      .catch(onFailure)
   }
   return (
     <form onSubmit={handleSubmit} className={className}>
       <Input
-        label="Username"
+        label="Display name"
+        info="This is how other people will see you on Focal"
         required
         type="text"
         name="account_name"
         value={loginForm.account_name}
-        onChange={e => setSignupForm(f => ({
+        onChange={e => setSignUpForm(f => ({
           ...f,
           account_name: e.target.value,
         }))}
@@ -36,22 +41,22 @@ const SignupForm = ({ className = '', onSubmit = noop }) => {
 
       <Input
         label="Email"
+        info="Your email address will not be shared with other users or third parties"
         required
         type="email"
         name="account_email"
         value={loginForm.account_email}
-        onChange={e => setSignupForm(f => ({
+        onChange={e => setSignUpForm(f => ({
           ...f,
           account_email: e.target.value,
         }))}
       />
 
       <div className="col">
-        <Button type="submit">Login</Button>
-        <Button type="submit" appearance="link">Sign up</Button>
+        <Button type="submit">Sign up</Button>
       </div>
     </form>
   )
 }
 
-export default SignupForm
+export default SignUpForm

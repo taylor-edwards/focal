@@ -1,5 +1,7 @@
 import { FLASK_ENDPOINT } from 'config'
 
+const toJSON = r => r.json()
+
 /**
  * GraphQL endpoints should only be used in serverside code. They must not be
  * exposed to the internet because the GraphQL integration in this app does not
@@ -32,7 +34,9 @@ export const fetchQuery = (name, query, variables = {}) => {
       }),
       signal: controller.signal,
     }
-  ).finally(() => {
+  )
+  .then(toJSON)
+  .finally(() => {
     clearTimeout(timer)
   })
 }
@@ -241,7 +245,7 @@ export const fetchManufacturers = () => fetchQuery(
       }
     }
   }`
-)
+).then(toJSON)
 
 export const fetchPhotos = (options = {}) => fetchQuery(
   'Photos',
@@ -257,7 +261,7 @@ export const fetchPhotos = (options = {}) => fetchQuery(
     }
   }`,
   options,
-)
+).then(toJSON)
 
 export const fetchPhoto = photoId => fetchQuery(
   'Photo',
@@ -312,7 +316,7 @@ export const fetchPhoto = photoId => fetchQuery(
     }
   }`,
   { photoId },
-)
+).then(toJSON)
 
 export const fetchEdit = editId => fetchQuery(
   'Edit',
@@ -341,4 +345,4 @@ export const fetchEdit = editId => fetchQuery(
     }
   }`,
   { editId },
-)
+).then(toJSON)

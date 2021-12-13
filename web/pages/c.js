@@ -18,8 +18,8 @@ export const getStaticProps = async context => {
   try {
     const { fetchManufacturers } = require('queries')
     const { fetchFileSupport } = require('api')
-    const mfrs = await fetchManufacturers().then(r => r.json())
-    const fileSupport = await fetchFileSupport().then(r => r.json())
+    const mfrs = await fetchManufacturers()
+    const fileSupport = await fetchFileSupport()
     return {
       props: {
         manufacturers: mfrs.data.manufacturers,
@@ -126,7 +126,6 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
       return
     }
     submitPhoto({ ...photo, account_safename: safename })
-      .then(response => response.json())
       .then(async ({ photoId }) => {
         if (photoId) {
           await Promise.all(edits.map(

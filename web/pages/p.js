@@ -15,7 +15,7 @@ import Loading from 'components/Loading'
 export const getStaticProps = async context => {
   const { fetchPhotos } = require('queries')
   try {
-    const response = await fetchPhotos().then(r => r.json())
+    const response = await fetchPhotos()
     return {
       props: {
         photos: response.data.photos,

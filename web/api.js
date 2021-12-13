@@ -1,17 +1,21 @@
 import { FLASK_ENDPOINT } from 'config'
 
+const toJSON = r => r.json()
+
 export const fetchFileSupport = () => fetch(
   `${FLASK_ENDPOINT.BASE}/config/supported_file_extensions`,
-)
+).then(toJSON)
 
-export const authenticateAccount = ({ account_name, account_email }) =>
+export const createAccount = ({ account_name, account_email }) =>
   fetch(`${FLASK_ENDPOINT.BASE}/account`, {
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ account_name, account_email }),
     method: 'POST',
-  })
+  }).then(toJSON)
+
+// export const authenticateSession = ({ token})
 
 export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {
   const formData = new FormData()
@@ -27,7 +31,7 @@ export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {
   return fetch(`${FLASK_ENDPOINT.BASE}/photo`, {
     body: formData,
     method: 'PUT',
-  })
+  }).then(toJSON)
 }
 
 export const submitEdit = ({ edit_file, preview_file, ...editForm }) => {
@@ -44,5 +48,5 @@ export const submitEdit = ({ edit_file, preview_file, ...editForm }) => {
   return fetch(`${FLASK_ENDPOINT.BASE}/edit`, {
     body: formData,
     method: 'PUT',
-  })
+  }).then(toJSON)
 }

@@ -6,9 +6,13 @@ class Doc extends Document {
       <Html>
         <Head>
           <style>{`
-            html, body {
+            html {
               background: #000;
               color: #fff;
+            }
+            body {
+              background: transparent;
+              color: inherit;
             }
           `}</style>
         </Head>
