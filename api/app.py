@@ -115,20 +115,14 @@ def del_prop(object, property):
         del object[property]
 
 # Load configuration
-with open('../config.json', 'r') as f:
+with open('config.json', 'r') as f:
     config = json.load(f)
 
-# Ensure upload directories exist
-
-upload_dir = os.path.join(os.getcwd(), *[secure_filename(p) for p in config['upload_path']])
-try:
-    os.mkdir(upload_dir)
-except FileExistsError:
-    pass
-
 # Open a connection to the Postgres database
-
-engine = create_engine('postgresql+psycopg2://focal:asdf@127.0.0.1:5432/focal')
+engine = create_engine(
+    "postgresql+psycopg2://"
+    f"{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}"
+    f"@db:5432/{os.environ['POSTGRES_DB']}")
 db_session = scoped_session(
     sessionmaker(
         autocommit=False,
@@ -143,7 +137,7 @@ Base.query = db_session.query_property()
 
 app = Flask(__name__)
 app.debug = True
-app.config['UPLOAD_FOLDER'] = upload_dir
+app.config['UPLOAD_FOLDER'] = '/storage'
 
 app.add_url_rule(
     '/graphql',
@@ -703,4 +697,4 @@ def shutdown_session(exception=None):
     db_session.remove()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')

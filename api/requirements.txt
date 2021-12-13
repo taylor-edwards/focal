@@ -30,5 +30,6 @@ SQLAlchemy==1.4.27
 starkbank-ecdsa==2.0.3
 toml==0.10.2
 typing-extensions==4.0.0
+uWSGI==2.0.20
 Werkzeug==2.0.2
 wrapt==1.13.3
