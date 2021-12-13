@@ -1,4 +1,5 @@
 import { FLASK_ENDPOINT } from 'config'
+import { createAbortController } from 'utils'
 import { fetchAccountDetails } from 'queries'
 
 export default function handler(req, res) {
@@ -9,7 +10,7 @@ export default function handler(req, res) {
   if (!['POST', 'DELETE'].includes(req.method)) {
     return res.status(405).send('')
   }
-  const controller = new AbortController()
+  const controller = createAbortController()
   const timer = setTimeout(
     () => controller.abort(),
     FLASK_ENDPOINT.DEFAULT_TIMEOUT,

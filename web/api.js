@@ -15,7 +15,7 @@ export const createAccount = ({ account_name, account_email }) =>
     method: 'POST',
   }).then(toJSON)
 
-// export const authenticateSession = ({ token})
+export const requestMagicLink = () => {}
 
 export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {
   const formData = new FormData()

@@ -1,4 +1,5 @@
 import { FLASK_ENDPOINT } from 'config'
+import { createAbortController } from 'utils'
 
 const toJSON = r => r.json()
 
@@ -15,7 +16,7 @@ const toJSON = r => r.json()
  */
 
 export const fetchQuery = (name, query, variables = {}) => {
-  const controller = new AbortController()
+  const controller = createAbortController()
   const timer = setTimeout(
     () => controller.abort(),
     FLASK_ENDPOINT.DEFAULT_TIMEOUT,

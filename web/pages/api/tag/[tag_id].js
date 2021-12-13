@@ -1,10 +1,11 @@
 import { FLASK_ENDPOINT } from 'config'
+import { createAbortController } from 'utils'
 
 export default function handler(req, res) {
   if (req.method === 'DELETE') {
     return res.status(405).send('')
   }
-  const controller = new AbortController()
+  const controller = createAbortController()
   const timer = setTimeout(
     () => controller.abort(),
     FLASK_ENDPOINT.DEFAULT_TIMEOUT,
