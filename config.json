@@ -1,6 +1,6 @@
 {
     "allowed_chars": " .,:;!?~_-$&%'\"",
-    "upload_path": ["web", "public", "uploads"],
+    "upload_path": ["../storage"],
     "preview_image_format": "jpg",
     "preview_image_size": [3000, 2000],
     "supported_file_extensions": {

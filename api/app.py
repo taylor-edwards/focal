@@ -115,7 +115,7 @@ def del_prop(object, property):
         del object[property]
 
 # Load configuration
-with open('config.json', 'r') as f:
+with open('../config.json', 'r') as f:
     config = json.load(f)
 
 # Ensure upload directories exist
