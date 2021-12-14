@@ -43,7 +43,7 @@ export const getStaticPaths = async () => {
       fallback: true,
     }
   } catch (err) {
-    console.warn('Caught error fetching all accounts:', err)
+    console.warn('Caught error fetching all accounts:\n', err)
   }
   return {
     paths: [],

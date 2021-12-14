@@ -246,7 +246,7 @@ export const fetchManufacturers = () => fetchQuery(
       }
     }
   }`
-).then(toJSON)
+)
 
 export const fetchPhotos = (options = {}) => fetchQuery(
   'Photos',
@@ -262,7 +262,7 @@ export const fetchPhotos = (options = {}) => fetchQuery(
     }
   }`,
   options,
-).then(toJSON)
+)
 
 export const fetchPhoto = photoId => fetchQuery(
   'Photo',
@@ -317,7 +317,7 @@ export const fetchPhoto = photoId => fetchQuery(
     }
   }`,
   { photoId },
-).then(toJSON)
+)
 
 export const fetchEdit = editId => fetchQuery(
   'Edit',
@@ -346,4 +346,4 @@ export const fetchEdit = editId => fetchQuery(
     }
   }`,
   { editId },
-).then(toJSON)
+)

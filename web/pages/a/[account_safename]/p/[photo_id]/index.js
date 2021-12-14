@@ -45,7 +45,7 @@ export const getStaticPaths = async () => {
       fallback: true,
     }
   } catch (err) {
-    console.warn('Caught error fetching photos for paths', err)
+    console.warn('Caught error fetching photos for paths\n', err)
     return {
       paths: [],
       fallback: true,

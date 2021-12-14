@@ -28,7 +28,7 @@ export const getStaticProps = async context => {
       revalidate: 600,
     }
   } catch (err) {
-    console.warn('Caught error fetching manufacturers:', err)
+    console.warn('Caught error fetching manufacturers:\n', err)
   }
   return {
     props: {},
@@ -139,7 +139,7 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
         router.push(`/a/${encodeURIComponent(safename)}/p/${encodeURIComponent(photoId)}`)
       })
       .catch(err => {
-        console.warn('Caught error while submitting photo', err)
+        console.warn('Caught error while submitting photo:\n', err)
       })
   }
 

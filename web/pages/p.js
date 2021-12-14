@@ -23,7 +23,7 @@ export const getStaticProps = async context => {
       revalidate: 60,
     }
   } catch (err) {
-    console.warn('Caught error fetching photos for props', err)
+    console.warn('Caught error fetching photos for props:\n', err)
     return {
       props: {
         photos: [],
