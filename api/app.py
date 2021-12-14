@@ -115,7 +115,7 @@ def del_prop(object, property):
         del object[property]
 
 # Load configuration
-with open('config.json', 'r') as f:
+with open('/config.json', 'r') as f:
     config = json.load(f)
 
 # Open a connection to the Postgres database
@@ -134,9 +134,7 @@ Base.metadata.create_all(engine)
 Base.query = db_session.query_property()
 
 # Create Flask app and add API routes
-
 app = Flask(__name__)
-app.debug = True
 app.config['UPLOAD_FOLDER'] = '/storage'
 
 app.add_url_rule(

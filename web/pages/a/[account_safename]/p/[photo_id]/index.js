@@ -23,7 +23,7 @@ export const getStaticProps = async context => {
       revalidate: 60,
     }
   } catch (err) {
-    console.warn(
+    console.log(
       'Issuing 404 for photo page request',
       JSON.stringify({ params: context.params }),
       err.message,
@@ -45,7 +45,7 @@ export const getStaticPaths = async () => {
       fallback: true,
     }
   } catch (err) {
-    console.warn('Caught error fetching photos for paths\n', err)
+    // console.warn('Caught error fetching photos for paths\n', err)
     return {
       paths: [],
       fallback: true,

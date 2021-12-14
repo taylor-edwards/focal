@@ -20,17 +20,17 @@ export const getStaticProps = async context => {
       props: {
         photos: response.data.photos,
       },
-      revalidate: 60,
+      revalidate: 10,
     }
   } catch (err) {
-    console.warn('Caught error fetching photos for props:\n', err)
-    return {
-      props: {
-        photos: [],
-        error: 'Oops, something went wrong loading this feed!',
-      },
-      revalidate: 30,
-    }
+    // console.warn('Caught error fetching photos for props:\n', err)
+  }
+  return {
+    props: {
+      photos: [],
+      error: 'Oops, something went wrong loading this feed!',
+    },
+    revalidate: 1,
   }
 }
 

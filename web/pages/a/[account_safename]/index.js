@@ -21,15 +21,15 @@ export const getStaticProps = async context => {
       revalidate: 60,
     }
   } catch (err) {
-    console.warn(
+    console.log(
       'Issuing 404 for account page',
       JSON.stringify({ params: context.params }),
       err.message,
     )
-    return {
-      notFound: true,
-      revalidate: 30,
-    }
+  }
+  return {
+    notFound: true,
+    revalidate: 30,
   }
 }
 
@@ -43,7 +43,7 @@ export const getStaticPaths = async () => {
       fallback: true,
     }
   } catch (err) {
-    console.warn('Caught error fetching all accounts:\n', err)
+    // console.warn('Caught error fetching all accounts:\n', err)
   }
   return {
     paths: [],

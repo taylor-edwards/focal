@@ -25,14 +25,14 @@ export const getStaticProps = async context => {
         manufacturers: mfrs.data.manufacturers,
         fileSupport: fileSupport,
       },
-      revalidate: 600,
+      revalidate: 60,
     }
   } catch (err) {
-    console.warn('Caught error fetching manufacturers:\n', err)
+    // console.warn('Caught error fetching manufacturers:\n', err)
   }
   return {
     props: {},
-    revalidate: 60,
+    revalidate: 5,
   }
 }
 

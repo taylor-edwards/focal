@@ -19,7 +19,7 @@ import json5 as json
 import re
 
 # Load configuration
-with open('config.json', 'r') as f:
+with open('/config.json', 'r') as f:
     config = json.load(f)
 
 def select_account(engine, account_id=None, account_email=None, account_safename=None):
