@@ -16,8 +16,7 @@ const noop = () => {}
 
 export const getStaticProps = async context => {
   try {
-    const { fetchManufacturers } = require('queries')
-    const { fetchFileSupport } = require('api')
+    const { fetchManufacturers, fetchFileSupport } = require('api')
     const mfrs = await fetchManufacturers()
     const fileSupport = await fetchFileSupport()
     return {

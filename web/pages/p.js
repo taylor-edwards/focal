@@ -13,7 +13,7 @@ import Link from 'components/Link'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
-  const { fetchPhotos } = require('queries')
+  const { fetchPhotos } = require('api')
   try {
     const response = await fetchPhotos()
     return {
@@ -23,7 +23,7 @@ export const getStaticProps = async context => {
       revalidate: 10,
     }
   } catch (err) {
-    // console.warn('Caught error fetching photos for props:\n', err)
+    console.warn('Caught error fetching photos for props:\n', err)
   }
   return {
     props: {

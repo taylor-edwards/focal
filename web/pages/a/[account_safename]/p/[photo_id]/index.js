@@ -8,7 +8,7 @@ import Link from 'components/Link'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
-  const { fetchPhoto } = require('queries')
+  const { fetchPhoto } = require('api')
   try {
     const { account_safename, photo_id } = context.params
     const response = await fetchPhoto(photo_id)
@@ -36,7 +36,7 @@ export const getStaticProps = async context => {
 }
 
 export const getStaticPaths = async () => {
-  const { fetchPhotos } = require('queries')
+  const { fetchPhotos } = require('api')
   try {
     const response = await fetchPhotos()
     return {

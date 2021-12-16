@@ -6,7 +6,7 @@ import { useRouter } from 'next/router'
 import Loading from 'components/Loading'
 
 export const getStaticProps = async context => {
-  const { fetchAccount } = require('queries')
+  const { fetchAccount } = require('api')
   try {
     // pre-render only public profile pages
     const accountSafename = context.params?.account_safename
@@ -35,7 +35,7 @@ export const getStaticProps = async context => {
 
 export const getStaticPaths = async () => {
   try {
-    const { fetchAccounts } = require('queries')
+    const { fetchAccounts } = require('api')
     const response = await fetchAccounts()
     return {
       paths: response.data.accounts.map(
