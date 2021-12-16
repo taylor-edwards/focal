@@ -15,12 +15,8 @@ from model import (
     Tag,
     Reaction
 )
-import json5 as json
 import re
-
-# Load configuration
-with open('/config.json', 'r') as f:
-    config = json.load(f)
+from utils import load_config
 
 def select_account(engine, account_id=None, account_email=None, account_safename=None):
     """Select an account by ID"""
@@ -33,46 +29,42 @@ def select_account(engine, account_id=None, account_email=None, account_safename
             return session.query(Account).filter_by(account_safename=account_safename).first()
         return None
 
-def create_account(engine, account_name, account_email, account_role='user'):
+def create_account(engine, account_name, account_email):
     """Create an account"""
     if not str.isascii(account_name):
         raise TypeError(f'Expected string for account name, but got {type(account_name)}')
+    if not str.isascii(account_email):
+        raise TypeError(f'Expected string for account email, but got {type(account_email)}')
     if len(account_name) < 2:
         raise ValueError('Account name too short')
+    if not 1 < account_email.index('@') < len(account_email) - 1:
+        raise ValueError(f'Email does not appear valid ({account_email})')
     for char in account_name:
         # require names to use the character sets A-z, 0-9 and (allowed_chars) exclusively
         x = ord(char)
         if not(65 <= x <=  90 or # between A-Z \
                97 <= x <= 122 or # between a-z \
                48 <= x <=  57 or # between 0-9 \
-               char in config['allowed_chars']):
+               char in load_config('allowed_chars')):
             raise ValueError('Invalid character found in account name')
     first_char_ord = ord(account_name[0])
     # use normalized "safename" in URLs and to improve overall uniqueness of account names
     safename = re.sub(' +', '_', re.sub('[^A-Za-z0-9 ]', '', account_name)).lower()
     if len(safename) < 2:
-        raise ValueError('Account name doesn\'t include enough letters and/or numbers')
+        raise ValueError('Name is too short')
     with Session(engine) as session:
         account = session.query(Account).filter_by(account_email=account_email).first()
         if account is not None:
-            raise ValueError('Account email in use')
-
-        account = session.query(Account).filter_by(account_name=account_name).first()
-        if account is not None:
-            raise ValueError('Account name in use')
+            raise ValueError('Email in use')
 
         account = session.query(Account).filter_by(account_safename=safename).first()
         if account is not None:
-            raise ValueError('Account name not unique enough')
-
-        if account_role not in ('user', 'admin'):
-            raise ValueError('Account role does not exist')
+            raise ValueError('Name in use')
 
         account = Account(
             account_name=account_name,
             account_safename=safename,
             account_email=account_email,
-            account_role=account_role
         )
         session.add(account)
         session.commit()
@@ -83,7 +75,6 @@ def update_account(
     engine,
     account_id,
     account_name=None,
-    account_role=None,
     account_email=None
 ):
     """Update an account"""
@@ -101,11 +92,6 @@ def update_account(
             if account is not None:
                 raise Exception(f'Account email in use ({account_email})')
             account_updates['account_email'] = account_email
-
-        if account_role is not None:
-            if account_role not in ('user', 'admin'):
-                raise Exception('Account role does not exist')
-            account_updates['account_role'] = account_role
 
         session.query(Account).filter_by(account_id=account_id).update(account_updates)
         session.commit()

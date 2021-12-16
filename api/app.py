@@ -8,36 +8,36 @@ Flask endpoints:
 | PATH          | METHOD     | FUNCTION            | SERVICES            |
 +---------------+------------+---------------------+---------------------+
 | /account      | PUT        | create_account      | Postgres, SendGrid  |
-| /account      | POST       | update_account      | Redis, Postgres     |
-| /account      | DELETE     | delete_account      | Redis, Postgres     |
-| /photo        | PUT        | create_photo        | Redis, Postgres     |
-| /photo        | POST       | update_photo        | Redis, Postgres     |
-| /photo        | DELETE     | delete_photo        | Redis, Postgres     |
-| /edit         | PUT        | create_edit         | Redis, Postgres     |
-| /edit         | POST       | update_edit         | Redis, Postgres     |
-| /edit         | DELETE     | delete_edit         | Redis, Postgres     |
-| /reply        | PUT        | create_reply        | Redis, Postgres     |
-| /reply        | POST       | update_reply        | Redis, Postgres     |
-| /reply        | DELETE     | delete_reply        | Redis, Postgres     |
-| /reaction     | PUT        | create_reaction     | Redis, Postgres     |
-| /reaction     | DELETE     | delete_reaction     | Redis, Postgres     |
-| /tag          | PUT        | create_tag          | Redis, Postgres     |
-| /tag          | DELETE     | delete_tag          | Redis, Postgres     |
-| /editor       | PUT        | create_editor       | Redis, Postgres     |
-| /editor       | POST       | update_editor       | Redis, Postgres     |
-| /editor       | DELETE     | delete_editor       | Redis, Postgres     |
-| /camera       | PUT        | create_camera       | Redis, Postgres     |
-| /camera       | POST       | update_camera       | Redis, Postgres     |
-| /camera       | DELETE     | delete_camera       | Redis, Postgres     |
-| /lens         | PUT        | create_lens         | Redis, Postgres     |
-| /lens         | POST       | update_lens         | Redis, Postgres     |
-| /lens         | DELETE     | delete_lens         | Redis, Postgres     |
-| /manufacturer | PUT        | create_manufacturer | Redis, Postgres     |
-| /manufacturer | POST       | update_manufacturer | Redis, Postgres     |
-| /manufacturer | DELETE     | delete_manufacturer | Redis, Postgres     |
-| /session      | POST       | create_session      | Redis, SendGrid     |
-| /session      | DELETE     | delete_session      | Redis               |
-| /graphql      | POST       | GraphQLView         | Postgres, Redis     |
+| /account      | POST       | update_account      | Postgres, SendGrid  |
+| /account      | DELETE     | delete_account      | Postgres, SendGrid  |
+| /photo        | PUT        | create_photo        | Postgres, disk      |
+| /photo        | POST       | update_photo        | Postgres, disk      |
+| /photo        | DELETE     | delete_photo        | Postgres, disk      |
+| /edit         | PUT        | create_edit         | Postgres, disk      |
+| /edit         | POST       | update_edit         | Postgres, disk      |
+| /edit         | DELETE     | delete_edit         | Postgres, disk      |
+| /reply        | PUT        | create_reply        | Postgres            |
+| /reply        | POST       | update_reply        | Postgres            |
+| /reply        | DELETE     | delete_reply        | Postgres            |
+| /reaction     | PUT        | create_reaction     | Postgres            |
+| /reaction     | DELETE     | delete_reaction     | Postgres            |
+| /tag          | PUT        | create_tag          | Postgres            |
+| /tag          | DELETE     | delete_tag          | Postgres            |
+| /editor       | PUT        | create_editor       | Postgres            |
+| /editor       | POST       | update_editor       | Postgres            |
+| /editor       | DELETE     | delete_editor       | Postgres            |
+| /camera       | PUT        | create_camera       | Postgres            |
+| /camera       | POST       | update_camera       | Postgres            |
+| /camera       | DELETE     | delete_camera       | Postgres            |
+| /lens         | PUT        | create_lens         | Postgres            |
+| /lens         | POST       | update_lens         | Postgres            |
+| /lens         | DELETE     | delete_lens         | Postgres            |
+| /manufacturer | PUT        | create_manufacturer | Postgres            |
+| /manufacturer | POST       | update_manufacturer | Postgres            |
+| /manufacturer | DELETE     | delete_manufacturer | Postgres            |
+| /session      | POST       | create_session      | htpasswd, TBD/Redis |
+| /session      | DELETE     | delete_session      | htpasswd, TBD/Redis |
+| /graphql      | ---        | GraphQLView         | Postgres            |
 +---------------+------------+---------------------+---------------------+
 
 Every endpoint performs authentication by comparing for a hash from the API
@@ -58,9 +58,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.utils import secure_filename
 from PIL import Image
-import json5 as json
-import hashlib
 
+from utils import load_config, hash_file, read_extension, del_prop
 from model import Base
 from schema import schema
 from handlers import (
@@ -94,29 +93,9 @@ from handlers import (
     delete_lens,
     create_manufacturer,
     update_manufacturer,
-    delete_manufacturer
+    delete_manufacturer,
 )
-
-def hash_file(file):
-    BUF_SIZE = 65536 # 64kb chunks
-    md5 = hashlib.md5()
-    while True:
-        data = file.read(BUF_SIZE)
-        if not data:
-            break
-        md5.update(data)
-    return md5
-
-def read_extension(file_name):
-    return file_name.rsplit('.', 1)[1].lower()
-
-def del_prop(object, property):
-    if property in object:
-        del object[property]
-
-# Load configuration
-with open('/config.json', 'r') as f:
-    config = json.load(f)
+from sessions import create_session, delete_session
 
 # Open a connection to the Postgres database
 engine = create_engine(
@@ -135,7 +114,6 @@ Base.query = db_session.query_property()
 
 # Create Flask app and add API routes
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = '/storage'
 
 app.add_url_rule(
     '/graphql',
@@ -148,9 +126,11 @@ app.add_url_rule(
 
 @app.route('/config/supported_file_extensions', methods=['GET'])
 def handle_supported_file_ext():
-    if not config:
-        return '', 404
-    return jsonify(config['supported_file_extensions']), 200
+    try:
+        return jsonify(load_config('supported_file_extensions')), 200
+    except Exception as err:
+        print('Could not load config', err)
+        return '', 500
 
 @app.route('/account', methods=['POST'])
 def handle_account():
@@ -354,6 +334,7 @@ def handle_create_photo():
 
     # Attach files
     # """Process raw and preview files"""
+    config = load_config()
     raw_file_path = None
     preview_file_path = None
     try:
@@ -367,7 +348,7 @@ def handle_create_photo():
                 raise ValueError(f'Unsupported extension ({extension})', 415)
 
             file_path = os.path.join(
-                app.config['UPLOAD_FOLDER'],
+                config['file_storage_path'],
                 secure_filename(hash_file(file).hexdigest() + '.' + config['preview_image_format'])
             )
             if os.path.exists(file_path):
@@ -405,7 +386,7 @@ def handle_create_photo():
                 raise ValueError(f'Unsupported extension ({extension})', 415)
 
             file_path = os.path.join(
-                app.config['UPLOAD_FOLDER'],
+                config['file_storage_path'],
                 secure_filename(hash_file(file).hexdigest() + '.' + extension)
             )
             if os.path.exists(file_path):

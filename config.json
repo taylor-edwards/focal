@@ -1,4 +1,5 @@
 {
+    "file_storage_path": "/storage",
     "allowed_chars": " .,:;!?~_-$&%'\"",
     "preview_image_format": "jpg",
     "preview_image_size": [3000, 2000],
