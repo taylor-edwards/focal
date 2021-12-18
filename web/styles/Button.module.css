@@ -1,9 +1,7 @@
 .btn,
 .link {
   font-family: var(--accent-font);
-  font-size: 0.75em;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
 }
 
 .btn {
@@ -11,25 +9,27 @@
   background: var(--chartreuse-1);
   border-radius: var(--small-radius);
   border: 0;
-  box-shadow: 0 3px 0 -1px var(--chartreuse-2);
+  box-shadow: 0 3px 0 -1px var(--chartreuse-3);
   color: #000;
   cursor: pointer;
   display: block;
+  font-size: 0.875em;
+  font-weight: 800;
   overflow: hidden;
   padding: 6px 24px;
   position: relative;
   text-transform: uppercase;
+  transition: background 50ms ease-out;
 }
 
 .btn:not(:disabled):hover,
 .btn:not(:disabled):focus {
   background: var(--chartreuse-2);
-  box-shadow: 0 3px 0 -1px var(--chartreuse-3);
 }
 
 .btn:not(:disabled):active {
   background: var(--chartreuse-3);
-  color: #333;
+  color: #111;
 }
 
 .btn:disabled {
@@ -50,11 +50,14 @@
 
 .link {
   color: var(--chartreuse-1);
+  font-weight: 700;
+  transition: color 50ms ease-out;
 }
 
 .link:not(:disabled):hover,
 .link:not(:disabled):focus {
   color: var(--chartreuse-2);
+  text-decoration: wavy underline;
 }
 
 .link:not(:disabled):active {

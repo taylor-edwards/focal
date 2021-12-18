@@ -5,7 +5,7 @@ const DocumentFill = ({ pattern = 'memphis.png' }) => (
     <style>
       {`
         html {
-          background: url("/${pattern}"), #000 !important;
+          background: url(/${pattern}), #000 !important;
         }
       `}
     </style>

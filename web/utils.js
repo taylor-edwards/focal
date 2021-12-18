@@ -11,7 +11,7 @@ const createAbortController = (() => {
       typeof window !== 'undefined' &&
       typeof window.AbortController === 'function'
     ) {
-      return AbortController
+      return window.AbortController
     }
     const { AbortController } = require('node-abort-controller')
     return AbortController
