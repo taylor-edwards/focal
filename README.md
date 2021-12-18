@@ -59,16 +59,21 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 127.0.0.1    cdn.local.pics
 ```
 
+6. Create two empty files used for local authentication:
+```sh
+touch .htpasswd .session_lock
+```
+
 Now that you're set up, continue on below to start running a local instance.
 
 ## Running a local instance
 
 Build and start all services for local development:
 ```sh
-docker-compose -f docker-compose.yml -f dev.docker-compose.yml up --build
+docker-compose -f docker-compose.yml -f dev.docker-compose.yml up
 ```
 
-Access the web app at [local.pics:8080](http://local.pics:8080) and explore the data set at [api.local.pics:8080/graphql](http://api.local.pics:8080/graphql). You can make modifications to the API and app servers in the /api and /web directories respectively.
+Access the web app at [local.pics:8080](http://local.pics:8080) and explore the data set at [local.pics:8080/graphql](http://local.pics:8080/api/graphql). You can make modifications to the API server and web app in the /api and /web directories respectively.
 
 Restart a container without stopping the whole cluster:
 ```sh
@@ -78,6 +83,11 @@ docker restart focal_api_1
 Reload NGINX configuration (while running):
 ```sh
 docker exec -it focal_proxy_1 sh -c "/etc/init.d/nginx reload"
+```
+
+Start an interactive session within the database container:
+```sh
+docker exec -it focal_db_1 psql focal -U focal_api
 ```
 
 ## Production builds and deployment

@@ -1,52 +1,49 @@
+import { FLASK_BASE } from 'config'
 import { fetchWithTimeout } from 'utils'
 
-export const fetchFileSupport = () => fetchWithTimeout('/api/file_support')
+/**
+ * Internal APIs that can only be accessed from within the Docker network
+ *
+ * Use these functions serverside by importing them within the methods:
+ *   - getServerSideProps
+ *   - getStaticProps
+ *   - getStaticPaths
+ *
+ * Example:
+ * ```js
+ * export const getStaticProps = async context => {
+ *   try {
+ *     const { fetchFileSupport } = require('api')
+ *     const fileSupport = await fetchFileSupport()
+ *     return { props: { fileSupport }, revalidate: 600 }
+ *   } catch (err) {
+ *     // do something with the error
+ *   }
+ *   return { props: {}, revalidate: 30 }
+ * }
+ * ```
+ */
 
-export const createAccount = ({ account_name, account_email }) =>
-  fetchWithTimeout('/api/account', {
-    body: JSON.stringify({ account_name, account_email }),
+export const fetchFileSupport = () =>
+  fetchWithTimeout(`${FLASK_BASE}/config/file_support`)
+
+export const createSession = account_email =>
+  fetchWithTimeout(`${FLASK_BASE}/session`, {
     method: 'POST',
+    body: JSON.stringify({ account_email }),
   })
 
-export const requestMagicLink = () => {}
-
-export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {
-  const formData = new FormData()
-  if (raw_file) {
-    formData.append('raw_file', raw_file, raw_file.name)
-  }
-  if (preview_file) {
-    formData.append('preview_file', preview_file, preview_file.name)
-  }
-  for (const key in photoForm) {
-    formData.set(key, photoForm[key])
-  }
-  return fetchWithTimeout('/api/photo', {
-    body: formData,
-    method: 'PUT',
+export const verifySession = token =>
+  fetchWithTimeout(`${FLASK_BASE}/session`, {
+    method: 'POST',
+    body: JSON.stringify({ token }),
   })
-}
 
-export const submitEdit = ({ edit_file, preview_file, ...editForm }) => {
-  const formData = new FormData()
-  if (edit_file) {
-    formData.append('edit_file', edit_file, edit_file.name)
-  }
-  if (preview_file) {
-    formData.append('preview_file', preview_file, preview_file.name)
-  }
-  for (const key in editForm) {
-    formData.set(key, editForm[key])
-  }
-  return fetchWithTimeout('/api/edit', {
-    body: formData,
-    method: 'PUT',
+export const deleteSession = token =>
+  fetchWithTimeout(`${FLASK_BASE}/session`, {
+    method: 'DELETE',
+    body: JSON.stringify({ token }),
   })
-}
-
-export const submitReply = () => {}
-
-export const submitReaction = () => {}
 
 export const fetchQuery = (name, query, variables = {}) => {
   const { FLASK_BASE } = require('config')
@@ -200,10 +197,10 @@ export const fetchAccount = ({ accountSafename }) => fetchQuery(
   { accountSafename },
 )
 
-export const fetchAccountDetails = ({ accountSafename }) => fetchQuery(
+export const fetchAccountDetails = ({ accountEmail }) => fetchQuery(
   'PrivateAccount',
-  `query PrivateAccount($accountSafename: String) {
-    account(accountSafename: $accountSafename) {
+  `query PrivateAccount($accountEmail: String) {
+    account(accountEmail: $accountEmail) {
       ${accountNameFields}
       email: accountEmail
       role: accountRole

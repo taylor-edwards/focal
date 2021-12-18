@@ -1,5 +1,7 @@
 aniso8601==7.0.0
 astroid==2.8.5
+bcrypt==3.2.0
+cffi==1.15.0
 click==8.0.3
 Flask==2.0.2
 Flask-GraphQL==2.0.1
@@ -20,6 +22,7 @@ Pillow==8.4.0
 platformdirs==2.4.0
 promise==2.3
 psycopg2-binary==2.9.2
+pycparser==2.21
 pylint==2.11.1
 python-http-client==3.3.4
 Rx==1.6.1

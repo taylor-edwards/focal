@@ -1,7 +1,9 @@
 """Database interface"""
 
+import os
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import now
+from sqlalchemy import create_engine
 from model import (
     Account,
     Camera,
@@ -18,7 +20,12 @@ from model import (
 import re
 from utils import load_config
 
-def select_account(engine, account_id=None, account_email=None, account_safename=None):
+# Open a connection to the Postgres database
+engine = create_engine("postgresql+psycopg2://"
+                      f"{os.environ.get('POSTGRES_USER')}:{os.environ.get('POSTGRES_PASSWORD')}"
+                      f"@db:5432/{os.environ.get('POSTGRES_DB')}")
+
+def select_account(account_id=None, account_email=None, account_safename=None):
     """Select an account by ID"""
     with Session(engine) as session:
         if account_id is not None:
@@ -29,7 +36,7 @@ def select_account(engine, account_id=None, account_email=None, account_safename
             return session.query(Account).filter_by(account_safename=account_safename).first()
         return None
 
-def create_account(engine, account_name, account_email):
+def create_account(account_name, account_email):
     """Create an account"""
     if not str.isascii(account_name):
         raise TypeError(f'Expected string for account name, but got {type(account_name)}')
@@ -72,7 +79,6 @@ def create_account(engine, account_name, account_email):
         return account
 
 def update_account(
-    engine,
     account_id,
     account_name=None,
     account_email=None
@@ -96,17 +102,17 @@ def update_account(
         session.query(Account).filter_by(account_id=account_id).update(account_updates)
         session.commit()
 
-def delete_account(engine, account_id):
+def delete_account(account_id):
     """Delete an account"""
     with Session(engine) as session:
-        account = select_account(engine, account_id=account_id)
+        account = select_account(account_id=account_id)
         if account is not None:
             session.delete(account)
             session.commit()
         else:
             raise Exception('Account not found')
 
-def select_photo(engine, photo_id=None, account_id=None, photo_title=None, preview_file_id=None):
+def select_photo(photo_id=None, account_id=None, photo_title=None, preview_file_id=None):
     """Select a photo"""
     with Session(engine) as session:
         if photo_id is not None:
@@ -121,14 +127,14 @@ def select_photo(engine, photo_id=None, account_id=None, photo_title=None, previ
                           .first()
         return None
 
-def create_photo(engine, account_id, raw_file_id=None, preview_file_id=None,
+def create_photo(account_id, raw_file_id=None, preview_file_id=None,
                  camera_id=None, lens_id=None, photo_title='', photo_text='', aperture=None,
                  flash=None, focal_length=None, iso=None, lens_filter='',
                  shutter_speed_denominator=None, shutter_speed_numerator=None):
     """Create a photo"""
     # pylint: disable=too-many-arguments,too-many-locals
     with Session(engine) as session:
-        photo = select_photo(engine, account_id=account_id, photo_title=photo_title)
+        photo = select_photo(account_id=account_id, photo_title=photo_title)
         if photo is not None:
             raise Exception(f'Photo title in use by account ({photo_title}, {account_id})')
         photo = Photo(account_id=account_id, camera_id=camera_id, lens_id=lens_id,
@@ -143,7 +149,6 @@ def create_photo(engine, account_id, raw_file_id=None, preview_file_id=None,
         return photo
 
 def update_photo(
-    engine,
     photo_id,
     **property_overrides
 ):
@@ -158,16 +163,16 @@ def update_photo(
         session.query(Photo).filter_by(photo_id=photo_id).update(photo_updates)
         session.commit()
 
-def delete_photo(engine, photo_id):
+def delete_photo(photo_id):
     """Delete a photo"""
     with Session(engine) as session:
-        photo = select_photo(engine, photo_id=photo_id)
+        photo = select_photo(photo_id=photo_id)
         if photo is None:
             raise Exception('Photo not found')
         session.delete(photo)
         session.commit()
 
-def select_edit(engine, edit_id=None, photo_id=None, account_id=None, edit_title=None):
+def select_edit(edit_id=None, photo_id=None, account_id=None, edit_title=None):
     """Select an edit"""
     with Session(engine) as session:
         if edit_id is not None:
@@ -183,7 +188,6 @@ def select_edit(engine, edit_id=None, photo_id=None, account_id=None, edit_title
         return None
 
 def create_edit(
-    engine,
     account_id,
     edit_title,
     preview_file_id=None,
@@ -228,7 +232,6 @@ def create_edit(
         return edit
 
 def update_edit(
-    engine,
     edit_id,
     **property_overrides
 ):
@@ -251,16 +254,16 @@ def update_edit(
         session.query(Edit).filter_by(edit_id=edit_id).update(edit_updates)
         session.commit()
 
-def delete_edit(engine, edit_id):
+def delete_edit(edit_id):
     """Delete an edit"""
     with Session(engine) as session:
-        edit = select_edit(engine, edit_id=edit_id)
+        edit = select_edit(edit_id=edit_id)
         if edit is None:
             raise Exception(f'Edit not found ({edit_id})')
         session.delete(edit)
         session.commit()
 
-def select_reply(engine, reply_id):
+def select_reply(reply_id):
     """Select a reply"""
     with Session(engine) as session:
         if reply_id is not None:
@@ -268,7 +271,6 @@ def select_reply(engine, reply_id):
         return None
 
 def create_reply(
-    engine,
     account_id,
     reply_text,
     photo_id=None,
@@ -287,7 +289,7 @@ def create_reply(
         session.refresh(reply)
         return reply
 
-def update_reply(engine, reply_id, **property_overrides):
+def update_reply(reply_id, **property_overrides):
     """Update a reply"""
     with Session(engine) as session:
         reply_property_list = ['reply_text']
@@ -295,16 +297,16 @@ def update_reply(engine, reply_id, **property_overrides):
         session.query(Reply).filter_by(reply_id=reply_id).update(reply_updates)
         session.commit()
 
-def delete_reply(engine, reply_id):
+def delete_reply(reply_id):
     """Delete a reply"""
     with Session(engine) as session:
-        reply = select_reply(engine, reply_id=reply_id)
+        reply = select_reply(reply_id=reply_id)
         if reply is None:
             raise Exception(f'Reply not found ({reply_id})')
         session.delete(reply)
         session.commit()
 
-def select_reaction(engine, reaction_id):
+def select_reaction(reaction_id):
     """Select an reaction"""
     with Session(engine) as session:
         if reaction_id is not None:
@@ -312,7 +314,6 @@ def select_reaction(engine, reaction_id):
         return None
 
 def create_reaction(
-    engine,
     account_id,
     reaction_photo_id=None,
     reaction_edit_id=None,
@@ -331,23 +332,23 @@ def create_reaction(
         session.refresh(reaction)
         return reaction
 
-def delete_reaction(engine, reaction_id):
+def delete_reaction(reaction_id):
     """Delete an reaction"""
     with Session(engine) as session:
-        reaction = select_reaction(engine, reaction_id=reaction_id)
+        reaction = select_reaction(reaction_id=reaction_id)
         if reaction is None:
             raise Exception(f'Reaction not found ({reaction_id})')
         session.delete(reaction)
         session.commit()
 
-def select_file(engine, file_id):
+def select_file(file_id):
     """Select a file"""
     with Session(engine) as session:
         if file_id is not None:
             return session.query(File).filter_by(file_id=file_id).first()
         return None
 
-def create_file(engine, file_path=None, file_name=None,
+def create_file(file_path=None, file_name=None,
                 file_extension=None, file_size=0,
                 image_width=None, image_height=None):
     """Create a file"""
@@ -359,23 +360,23 @@ def create_file(engine, file_path=None, file_name=None,
         session.refresh(file)
         return file
 
-def delete_file(engine, file_id):
+def delete_file(file_id):
     """Delete a file"""
     with Session(engine) as session:
-        file = select_file(engine, file_id)
+        file = select_file(file_id)
         if file is None:
             raise Exception(f'File not found ({file_id})')
         session.delete(file)
         session.commit()
 
-def select_tag(engine, tag_id):
+def select_tag(tag_id):
     """Select a tag"""
     with Session(engine) as session:
         if tag_id is not None:
             return session.query(Tag).filter_by(tag_id=tag_id).first()
         return None
 
-def create_tag(engine, tag_name):
+def create_tag(tag_name):
     """Create a tag"""
     with Session(engine) as session:
         tag = Tag(tag_name=tag_name)
@@ -384,23 +385,23 @@ def create_tag(engine, tag_name):
         session.refresh(tag)
         return tag
 
-def delete_tag(engine, tag_id):
+def delete_tag(tag_id):
     """Delete a tag"""
     with Session(engine) as session:
-        tag = select_tag(engine, tag_id=tag_id)
+        tag = select_tag(tag_id=tag_id)
         if tag is None:
             raise Exception(f'Tag not found ({tag_id})')
         session.delete(tag)
         session.commit()
 
-def select_editor(engine, editor_id):
+def select_editor(editor_id):
     """Select an editor"""
     with Session(engine) as session:
         if editor_id is not None:
             return session.query(Editor).filter_by(editor_id=editor_id).first()
         return None
 
-def create_editor(engine, editor_name, editor_version=None, editor_platform=None):
+def create_editor(editor_name, editor_version=None, editor_platform=None):
     """Create an editor"""
     with Session(engine) as session:
         editor = Editor(
@@ -413,7 +414,7 @@ def create_editor(engine, editor_name, editor_version=None, editor_platform=None
         session.refresh(editor)
         return editor
 
-def update_editor(engine, editor_id, **property_overrides):
+def update_editor(editor_id, **property_overrides):
     """Update an editor"""
     with Session(engine) as session:
         editor_property_list = [
@@ -425,23 +426,23 @@ def update_editor(engine, editor_id, **property_overrides):
         session.query(Editor).filter_by(editor_id=editor_id).update(editor_updates)
         session.commit()
 
-def delete_editor(engine, editor_id):
+def delete_editor(editor_id):
     """Delete an editor"""
     with Session(engine) as session:
-        editor = select_editor(engine, editor_id=editor_id)
+        editor = select_editor(editor_id=editor_id)
         if editor is None:
             raise Exception(f'Editor not found ({editor_id})')
         session.delete(editor)
         session.commit()
 
-def select_camera(engine, camera_id):
+def select_camera(camera_id):
     """Select a camera"""
     with Session(engine) as session:
         if camera_id is not None:
             return session.query(Camera).filter_by(camera_id=camera_id).first()
         return None
 
-def create_camera(engine, manufacturer_id, camera_model):
+def create_camera(manufacturer_id, camera_model):
     """Create a camera"""
     with Session(engine) as session:
         camera = Camera(
@@ -453,7 +454,7 @@ def create_camera(engine, manufacturer_id, camera_model):
         session.refresh(camera)
         return camera
 
-def update_camera(engine, camera_id, **property_overrides):
+def update_camera(camera_id, **property_overrides):
     """Update a camera"""
     with Session(engine) as session:
         camera_property_list = ['manufacturer_id', 'camera_model']
@@ -461,16 +462,16 @@ def update_camera(engine, camera_id, **property_overrides):
         session.query(Camera).filter_by(camera_id=camera_id).update(camera_updates)
         session.commit()
 
-def delete_camera(engine, camera_id):
+def delete_camera(camera_id):
     """Delete a camera"""
     with Session(engine) as session:
-        camera = select_camera(engine, camera_id=camera_id)
+        camera = select_camera(camera_id=camera_id)
         if camera is None:
             raise Exception(f'Camera not found ({camera_id})')
         session.delete(camera)
         session.commit()
 
-def select_lens(engine, lens_id):
+def select_lens(lens_id):
     """Select a lens"""
     with Session(engine) as session:
         if lens_id is not None:
@@ -478,7 +479,6 @@ def select_lens(engine, lens_id):
         return None
 
 def create_lens(
-    engine,
     manufacturer_id,
     lens_model,
     aperture_min=None,
@@ -502,7 +502,7 @@ def create_lens(
         session.refresh(lens)
         return lens
 
-def update_lens(engine, lens_id, **property_overrides):
+def update_lens(lens_id, **property_overrides):
     """Update a lens"""
     with Session(engine) as session:
         lens_property_list = [
@@ -517,16 +517,16 @@ def update_lens(engine, lens_id, **property_overrides):
         session.query(Lens).filter_by(lens_id=lens_id).update(lens_updates)
         session.commit()
 
-def delete_lens(engine, lens_id):
+def delete_lens(lens_id):
     """Delete a lens"""
     with Session(engine) as session:
-        lens = select_lens(engine, lens_id=lens_id)
+        lens = select_lens(lens_id=lens_id)
         if lens is None:
             raise Exception(f'Lens not found ({lens_id})')
         session.delete(lens)
         session.commit()
 
-def select_manufacturer(engine, manufacturer_id=None, manufacturer_name=None):
+def select_manufacturer(manufacturer_id=None, manufacturer_name=None):
     """Select a manufacturer"""
     with Session(engine) as session:
         if manufacturer_id is not None:
@@ -539,7 +539,7 @@ def select_manufacturer(engine, manufacturer_id=None, manufacturer_name=None):
                           .first()
         return None
 
-def create_manufacturer(engine, manufacturer_name):
+def create_manufacturer(manufacturer_name):
     """Create a manufacturer"""
     with Session(engine) as session:
         manufacturer = Manufacturer(manufacturer_name=manufacturer_name)
@@ -548,7 +548,7 @@ def create_manufacturer(engine, manufacturer_name):
         session.refresh(manufacturer)
         return manufacturer
 
-def update_manufacturer(engine, manufacturer_id, **property_overrides):
+def update_manufacturer(manufacturer_id, **property_overrides):
     """Update a manufacturer"""
     with Session(engine) as session:
         manufacturer_property_list = ['manufacturer_name']
@@ -560,7 +560,7 @@ def update_manufacturer(engine, manufacturer_id, **property_overrides):
                .update(manufacturer_updates)
         session.commit()
 
-def delete_manufacturer(engine, manufacturer_id):
+def delete_manufacturer(manufacturer_id):
     """Delete a manufacturer"""
     with Session(engine) as session:
         manufacturer = select_manufacturer(engine, manufacturer_id=manufacturer_id)

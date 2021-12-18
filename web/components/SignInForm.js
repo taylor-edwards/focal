@@ -1,13 +1,7 @@
 import { useState } from 'react'
-import { noop } from 'utils'
-import { requestMagicLink } from 'api'
+import { fetchWithTimeout, noop } from 'utils'
 import Button from 'components/Button'
 import Input from 'components/Input'
-
-const loginFormState = () => ({
-  account_email: '',
-  account_name: '',
-})
 
 const SignInForm = ({
   className,
@@ -15,31 +9,36 @@ const SignInForm = ({
   onSuccess = noop,
   onFailure = console.warn,
 }) => {
-  const [loginForm, setSignInForm] = useState(loginFormState())
+  const [email, setEmail] = useState('')
   const handleSubmit = e => {
-    onSubmit(e)
-    e.preventDefault()
-    e.stopPropagation()
-    requestMagicLink(loginForm)
-      .then(onSuccess)
-      .catch(onFailure)
+    const idx = email.indexOf('@')
+    if (idx > 0 && idx < email.length - 1) {
+      onSubmit({ email })
+      e.preventDefault()
+      e.stopPropagation()
+      fetchWithTimeout('/api/session', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      })
+    }
   }
   return (
     <form onSubmit={handleSubmit} className={className}>
       <Input
         label="Email"
+        info="Your email address will not be shared with other users or third parties"
         required
         type="email"
-        name="account_email"
-        value={loginForm.account_email}
-        onChange={e => setSignInForm(f => ({
-          ...f,
-          account_email: e.target.value,
-        }))}
+        name="email"
+        value={email}
+        placeholder="you@example.com"
+        onChange={e => setEmail(e.target.value ?? '')}
       />
 
       <div className="col">
         <Button type="submit">Sign in</Button>
+        <small>- or -</small>
+        <Button type="submit" appearance="link">Create account</Button>
       </div>
     </form>
   )

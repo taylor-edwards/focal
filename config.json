@@ -1,5 +1,11 @@
 {
     "file_storage_path": "/storage",
+    "session_lockfile": "/session_lock",
+    "htpasswd_path": "/etc/nginx/.htpasswd",
+    "session_recycle_interval": 60,
+    "magic_link_max_age": 3600,
+    "htpasswd_timeout": 5,
+    "htpasswd_retry_interval": 0.05,
     "allowed_chars": " .,:;!?~_-$&%'\"",
     "preview_image_format": "jpg",
     "preview_image_size": [3000, 2000],

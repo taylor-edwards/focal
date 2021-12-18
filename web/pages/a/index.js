@@ -24,11 +24,11 @@ const AuthenticationPage = () => {
       <main className="login-page">
         <article className="card col">
           <Logo includeSubtext />
-          <SignUpForm
+          {/*<SignUpForm
             onSuccess={({ accountSafename }) =>
               router.push(`/a/${encodeURIComponent(accountSafename)}`)
             }
-          />
+          />*/}
           {!magicLinkSent && (
             <SignInForm onSuccess={() => setMagicLinkSent(true)} />
           )}

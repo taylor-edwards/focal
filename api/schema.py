@@ -85,9 +85,14 @@ class Ban(SQLAlchemyObjectType):
 class Query(ObjectType):
     """Query resolvers"""
     # pylint: disable=too-many-public-methods
-    account = Field(Account, account_safename=Argument(type=String))
-    def resolve_account(self, info, account_safename=None):
+    account = Field(Account, account_email=Argument(type=String),
+                             account_safename=Argument(type=String))
+    def resolve_account(self, info, account_email=None, account_safename=None):
         """Query for account by safename"""
+        if account_email is not None:
+            return Account.get_query(info) \
+                          .filter(AccountModel.account_email == account_email) \
+                          .first()
         if account_safename is not None:
             return Account.get_query(info) \
                           .filter(AccountModel.account_safename == account_safename) \
