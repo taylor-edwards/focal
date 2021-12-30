@@ -23,20 +23,22 @@ def sendMessageWithTemplate(to_emails, template_id, data={}):
                          f'(status: {response.status_code})')
 
 def sendSignInMagicLink(email, token):
-    # include email and token in URL so we can authenticate in NextJS with getServerSideProps
+    if not 1 < email.index('@') < len(email) - 1:
+        raise ValueError(f'Email does not appear valid ({email})')
     return sendMessageWithTemplate(
         to_emails=email,
         template_id=os.environ.get('SIGN_IN_SENDGRID_TEMPLATE_ID'),
         data={
-            'magic_link': f'{ORIGIN}/signin?token={urllib.parse.quote(token)}'
+            'magic_link': f'{ORIGIN}/magic?token={urllib.parse.quote(token)}'
         }
     )
 
 def sendDeleteAccountMagicLink(email, token):
-    # request that the user confirm their email address on the /delete page
+    if not 1 < email.index('@') < len(email) - 1:
+        raise ValueError(f'Email does not appear valid ({email})')
     return sendMessageWithTemplate(
         to_emails=email,
         template_id=os.environ.get('DELETE_ACCOUNT_SENDGRID_TEMPLATE_ID'),
-        data={ 'magic_link': f'{ORIGIN}/delete?token={urllib.parse.quote(token)}' }
+        data={ 'magic_link': f'{ORIGIN}/magic?delete=true&token={urllib.parse.quote(token)}' }
     )
 

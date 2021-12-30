@@ -1,5 +1,76 @@
-import { FLASK_BASE } from 'config'
-import { fetchWithTimeout } from 'utils'
+import { PUBLIC_API, PRIVATE_API } from 'config'
+import { fetchWithAuth, fetchWithTimeout } from 'utils'
+
+/**
+ * Public APIs for access from the web client in-browser
+ *
+ * These calls are authenticated by an HttpOnly cookie
+ */
+
+export const createAccount = ({ name, handle }) =>
+  fetchWithTimeout(`${PUBLIC_API}/account`, {
+    method: 'POST',
+    body: JSON.stringify({ account_name: name, account_handle: handle }),
+  })
+
+export const submitPhoto = ({ raw_file, preview_file, ...photoForm }) => {
+  const formData = new FormData()
+  if (raw_file) {
+    formData.append('raw_file', raw_file, raw_file.name)
+  }
+  if (preview_file) {
+    formData.append('preview_file', preview_file, preview_file.name)
+  }
+  for (const key in photoForm) {
+    formData.set(key, photoForm[key])
+  }
+  return fetchWithTimeout(`${PUBLIC_API}/photo`, {
+    asJSON: false,
+    method: 'PUT',
+    body: formData,
+  })
+}
+
+export const submitEdit = ({ edit_file, preview_file, ...editForm }) => {
+  const formData = new FormData()
+  if (edit_file) {
+    formData.append('edit_file', edit_file, edit_file.name)
+  }
+  if (preview_file) {
+    formData.append('preview_file', preview_file, preview_file.name)
+  }
+  for (const key in editForm) {
+    formData.set(key, editForm[key])
+  }
+  return fetchWithTimeout(`${PUBLIC_API}/edit`, {
+    asJSON: false,
+    method: 'PUT',
+    body: formData,
+  })
+}
+
+export const submitReply = (reply) => {
+  return fetchWithTimeout(`${PUBLIC_API}/reply`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      photo_id: reply.photoId,
+      edit_id: reaction.editId,
+
+    }),
+  })
+}
+
+export const submitReaction = (reaction) => {
+  return fetchWithTimeout(`${PUBLIC_API}/reaction`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      photo_id: reaction.photoId,
+      edit_id: reaction.editId,
+      reply_id: reaction.replyId,
+      reaction_id: reaction.reactionId,
+    }),
+  })
+}
 
 /**
  * Internal APIs that can only be accessed from within the Docker network
@@ -25,29 +96,38 @@ import { fetchWithTimeout } from 'utils'
  */
 
 export const fetchFileSupport = () =>
-  fetchWithTimeout(`${FLASK_BASE}/config/file_support`)
+  fetchWithTimeout(`${PRIVATE_API}/config/file_support`)
 
 export const createSession = account_email =>
-  fetchWithTimeout(`${FLASK_BASE}/session`, {
-    method: 'POST',
+  fetchWithTimeout(`${PRIVATE_API}/session`, {
+    method: 'PUT',
     body: JSON.stringify({ account_email }),
   })
 
-export const verifySession = token =>
-  fetchWithTimeout(`${FLASK_BASE}/session`, {
+export const authorizeSession = token =>
+  fetchWithAuth(token, `${PRIVATE_API}/session`, {
     method: 'POST',
-    body: JSON.stringify({ token }),
   })
 
 export const deleteSession = token =>
-  fetchWithTimeout(`${FLASK_BASE}/session`, {
+  fetchWithAuth(token, `${PRIVATE_API}/session`, {
+    asJSON: false,
     method: 'DELETE',
-    body: JSON.stringify({ token }),
   })
 
-export const fetchQuery = (name, query, variables = {}) => {
-  const { FLASK_BASE } = require('config')
-  return fetchWithTimeout(`${FLASK_BASE}/graphql`, {
+export const getSession = token =>
+  fetchWithAuth(token, `${PRIVATE_API}/session`).catch(err => ({}))
+
+export const getAccountDetails = token =>
+  fetchWithAuth(token, `${PRIVATE_API}/account`).catch(err => ({}))
+
+/**
+ * GraphQL clientside integration for serverside usage only
+ */
+
+const fetchQuery = (name, query, variables = {}) => {
+  const { PRIVATE_API } = require('config')
+  return fetchWithTimeout(`${PRIVATE_API}/graphql`, {
     method: 'POST',
     body: JSON.stringify({
       operationName: name,
@@ -59,7 +139,7 @@ export const fetchQuery = (name, query, variables = {}) => {
 
 const accountNameFields = `
   name: accountName
-  safename: accountSafename`
+  handle: accountHandle`
 
 const previewFields = `
   path: filePath
@@ -175,10 +255,10 @@ export const fetchAccounts = () => fetchQuery(
   }`
 )
 
-export const fetchAccount = ({ accountSafename }) => fetchQuery(
+export const fetchAccount = ({ accountHandle }) => fetchQuery(
   'PublicAccount',
-  `query PublicAccount($accountSafename: String) {
-    account(accountSafename: $accountSafename) {
+  `query PublicAccount($accountHandle: String) {
+    account(accountHandle: $accountHandle) {
       ${commonAccountFields}
       following {
         ${accountNameFields}
@@ -194,7 +274,7 @@ export const fetchAccount = ({ accountSafename }) => fetchQuery(
       }
     }
   }`,
-  { accountSafename },
+  { accountHandle },
 )
 
 export const fetchAccountDetails = ({ accountEmail }) => fetchQuery(
@@ -361,4 +441,14 @@ export const fetchEdit = editId => fetchQuery(
     }
   }`,
   { editId },
+)
+
+export const fetchReactions = () => fetchQuery(
+  'Reactions',
+  `query Reactions() {
+    reactions {
+      name: reactionName
+      emoji: reactionEmoji
+    }
+  }`,
 )

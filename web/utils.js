@@ -50,3 +50,22 @@ export const fetchWithTimeout = async (
   }
   return Promise.resolve(response)
 }
+
+// use fetchWithAuth for internal authorization in serverside API calls
+export const fetchWithAuth = (token, endpoint, params = {}) =>
+  fetchWithTimeout(endpoint, {
+    ...params,
+    headers: {
+      ...(params.headers ?? {}),
+      Authorization: `Basic ${token}`,
+    },
+  })
+
+export const parseCookie = cookie => {
+  // returns the session token, if any (only usable serverside)
+  if (/^token=.+$/.test(cookie)) {
+    const token = cookie.slice(cookie.indexOf('=') + 1)
+    return decodeURIComponent(token)
+  }
+  return null
+}

@@ -1,39 +1,77 @@
 /**
- * Login page
- *
- * Redirect authenticated users to their account page
+ * Account sign-up, sign-in and management page
  */
 
+ export const getServerSideProps = async context => {
+  try {
+    const { parseCookie } = require('utils')
+    const { getAccountDetails, getSession } = require('api')
+    const token = parseCookie(context.req.headers.cookie)
+    if (token) {
+      const { account = null } = await getAccountDetails(token)
+      const { session = null } = await getSession(token)
+      return {
+        props: {
+          account,
+          session,
+        },
+      }
+    }
+  } catch (err) {
+    console.warn('Could not find account:\n', err)
+  }
+  return {
+    props: {},
+  }
+}
+
 import { useState } from 'react'
-import { useRouter } from 'next/router'
 import Copyright from 'components/Copyright'
 import DocumentFill from 'components/DocumentFill'
 import Logo from 'components/Logo'
-
 import SignInForm from 'components/SignInForm'
 import SignUpForm from 'components/SignUpForm'
 
-const AuthenticationPage = () => {
-  const router = useRouter()
-  // if user does not have a name or handle, prompt them to submit info
-  // once user is authenticated, redirect to /a/account_name
+const PrivateAccountPage = ({ account, session }) => {
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const showSignin = !session
+  const showAccountSetup = !showSignin && !account
+  const showAccount = !!account
   return (
     <>
       <DocumentFill />
       <main className="login-page">
         <article className="card col">
           <Logo includeSubtext />
-          {/*<SignUpForm
-            onSuccess={({ accountSafename }) =>
-              router.push(`/a/${encodeURIComponent(accountSafename)}`)
-            }
-          />*/}
-          {!magicLinkSent && (
-            <SignInForm onSuccess={() => setMagicLinkSent(true)} />
+          {showSignin && (
+            <>
+              {!magicLinkSent && (
+                <SignInForm onSuccess={() => setMagicLinkSent(true)} />
+              )}
+              {magicLinkSent && (
+                <>
+                  <h1>Email sent</h1>
+                  <p>Check your email for a link to finish signing in</p>
+                </>
+              )}
+            </>
           )}
-          {magicLinkSent && (
-            <p>Check your email for a sign in link</p>
+
+          {showAccountSetup && (
+            <>
+              <h1>Account details</h1>
+              <p>Finish setting up your account on Focal.</p>
+              <SignUpForm />
+            </>
+          )}
+
+          {showAccount && (
+            <>
+              <h1>Your Account</h1>
+              <p>Name: {account.name}</p>
+              <p>Handle: {account.handle}</p>
+              <p>Email: {account.email}</p>
+            </>
           )}
         </article>
       </main>
@@ -42,4 +80,4 @@ const AuthenticationPage = () => {
   )
 }
 
-export default AuthenticationPage
+export default PrivateAccountPage

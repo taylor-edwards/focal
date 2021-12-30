@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { noop } from 'utils'
-import { createAccount } from 'public'
+import { createAccount } from 'api'
 import Button from 'components/Button'
 import Input from 'components/Input'
 
@@ -14,11 +14,13 @@ const SignUpForm = ({
   const [handle, setHandle] = useState('')
   const handleSubmit = e => {
     onSubmit(e)
-    e.preventDefault()
-    e.stopPropagation()
-    createAccount(auth, loginForm)
-      .then(onSuccess)
-      .catch(onFailure)
+    if (!e.defaultPrevented) {
+      e.preventDefault()
+      e.stopPropagation()
+      createAccount({ name, handle })
+        .then(onSuccess)
+        .catch(onFailure)
+    }
   }
   return (
     <form onSubmit={handleSubmit} className={className}>
@@ -34,7 +36,7 @@ const SignUpForm = ({
 
       <Input
         label="Handle"
-        info="This is how you'll appear in URLs and tags"
+        info="This is how other people can mention you on Focal, and how you'll appear in URLs"
         prefix="@"
         required
         type="handle"

@@ -124,18 +124,18 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
       console.log('Edit form is incomplete!', photo, edits)
       return
     }
-    submitPhoto({ ...photo, account_safename: safename })
+    submitPhoto({ ...photo, account_handle: handle })
       .then(async ({ photoId }) => {
         if (photoId) {
           await Promise.all(edits.map(
             edit => submitEdit({
               ...edit,
-              account_safename: safename,
+              account_handle: handle,
               photo_id: photoId,
             }).then(noop, noop)
           ))
         }
-        router.push(`/a/${encodeURIComponent(safename)}/p/${encodeURIComponent(photoId)}`)
+        router.push(`/a/${encodeURIComponent(handle)}/p/${encodeURIComponent(photoId)}`)
       })
       .catch(err => {
         console.warn('Caught error while submitting photo:\n', err)

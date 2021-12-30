@@ -59,11 +59,6 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 127.0.0.1    cdn.local.pics
 ```
 
-6. Create two empty files used for local authentication:
-```sh
-touch .htpasswd .session_lock
-```
-
 Now that you're set up, continue on below to start running a local instance.
 
 ## Running a local instance

@@ -44,14 +44,14 @@ const PhotoFeed = ({ photos }) => {
       <section>
         <h1>Photo feed</h1>
         {photos.map(photo => {
-          const safename = encodeURIComponent(photo.account.safename)
-          const photoLink = `/a/${safename}/p/${encodeURIComponent(photo.id)}`
+          const handle = encodeURIComponent(photo.account.handle)
+          const photoLink = `/a/${handle}/p/${encodeURIComponent(photo.id)}`
           return (
             <article key={photo.id}>
               <Link href={photoLink}>
                 {photo.title && <h4>{photo.title}</h4>}
               </Link>
-              <Link href={`/a/${safename}`}>
+              <Link href={`/a/${handle}`}>
                 <p>{photo.account.name} posted at <DateTime date={photo.createdAt} /></p>
               </Link>
               {photo.previewFile && <Image srcFile={photo.previewFile} />}

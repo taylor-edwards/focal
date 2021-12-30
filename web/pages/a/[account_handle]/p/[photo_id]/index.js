@@ -10,9 +10,9 @@ import Loading from 'components/Loading'
 export const getStaticProps = async context => {
   const { fetchPhoto } = require('api')
   try {
-    const { account_safename, photo_id } = context.params
+    const { account_handle, photo_id } = context.params
     const response = await fetchPhoto(photo_id)
-    if (account_safename !== response.data.photo.account.safename) {
+    if (account_handle !== response.data.photo.account.handle) {
       // just because the photo exists doesn't mean it belongs to this account
       throw new Error('Account names do not match')
     }
@@ -41,7 +41,7 @@ export const getStaticPaths = async () => {
     const response = await fetchPhotos()
     return {
       paths: response.data.photos.map(
-        p => `/a/${encodeURIComponent(p.account.safename)}/p/${p.id}`),
+        p => `/a/${encodeURIComponent(p.account.handle)}/p/${p.id}`),
       fallback: true,
     }
   } catch (err) {

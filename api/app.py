@@ -4,44 +4,30 @@ Postgres database connected with SQLAlchemy
 
 Flask endpoints:
 
-+---------------+------------+---------------------+---------------------+
-| PATH          | METHOD     | FUNCTION            | SERVICES            |
-+---------------+------------+---------------------+---------------------+
-| /config/*     | GET        | load_config         | disk                |
-| /session      | PUT        | create_session      |                     |
-| /session      | POST       | verify_session      | disk                |
-| /session      | DELETE     | delete_session      | disk                |
-| /graphql      | ---        | GraphQLView         | Postgres            |
-| /account      | PUT        | create_account      | Postgres, SendGrid  |
-| /account      | POST       | update_account      | Postgres, SendGrid  |
-| /account      | DELETE     | delete_account      | Postgres, SendGrid  |
-| /photo        | PUT        | create_photo        | Postgres, disk      |
-| /photo        | POST       | update_photo        | Postgres, disk      |
-| /photo        | DELETE     | delete_photo        | Postgres, disk      |
-| /edit         | PUT        | create_edit         | Postgres, disk      |
-| /edit         | POST       | update_edit         | Postgres, disk      |
-| /edit         | DELETE     | delete_edit         | Postgres, disk      |
-| /reply        | PUT        | create_reply        | Postgres            |
-| /reply        | POST       | update_reply        | Postgres            |
-| /reply        | DELETE     | delete_reply        | Postgres            |
-| /reaction     | PUT        | create_reaction     | Postgres            |
-| /reaction     | DELETE     | delete_reaction     | Postgres            |
-| /tag          | PUT        | create_tag          | Postgres            |
-| /tag          | DELETE     | delete_tag          | Postgres            |
-# TODO: remove the routes for these commented lines
-# | /editor       | PUT        | create_editor       | Postgres            |
-# | /editor       | POST       | update_editor       | Postgres            |
-# | /editor       | DELETE     | delete_editor       | Postgres            |
-# | /camera       | PUT        | create_camera       | Postgres            |
-# | /camera       | POST       | update_camera       | Postgres            |
-# | /camera       | DELETE     | delete_camera       | Postgres            |
-# | /lens         | PUT        | create_lens         | Postgres            |
-# | /lens         | POST       | update_lens         | Postgres            |
-# | /lens         | DELETE     | delete_lens         | Postgres            |
-# | /manufacturer | PUT        | create_manufacturer | Postgres            |
-# | /manufacturer | POST       | update_manufacturer | Postgres            |
-# | /manufacturer | DELETE     | delete_manufacturer | Postgres            |
-+---------------+------------+---------------------+---------------------+
++---------------+------------+----------------------+---------------------+
+| PATH          | METHOD     | FUNCTION             | DEPENDENCIES        |
++---------------+------------+----------------------+---------------------+
+| /config/*     | GET        | load_config          | storage             |
+| /session      | PUT        | create_session       |                     |
+| /session      | POST       | authenticate_session |                     |
+| /session      | DELETE     | delete_session       |                     |
+| /auth         | GET        | verify_session       |                     |
+| /graphql      | ---        | GraphQLView          | Postgres            |
+| /account      | PUT        | create_account       | Postgres, SendGrid  |
+| /account      | POST       | update_account       | Postgres, SendGrid  |
+| /account      | DELETE     | delete_account       | Postgres, SendGrid  |
+| /photo        | PUT        | create_photo         | Postgres, storage   |
+| /photo        | POST       | update_photo         | Postgres, storage   |
+| /photo        | DELETE     | delete_photo         | Postgres, storage   |
+| /edit         | PUT        | create_edit          | Postgres, storage   |
+| /edit         | POST       | update_edit          | Postgres, storage   |
+| /edit         | DELETE     | delete_edit          | Postgres, storage   |
+| /reply        | PUT        | create_reply         | Postgres            |
+| /reply        | POST       | update_reply         | Postgres            |
+| /reply        | DELETE     | delete_reply         | Postgres            |
+| /reaction     | PUT        | create_reaction      | Postgres            |
+| /reaction     | DELETE     | delete_reaction      | Postgres            |
++---------------+------------+----------------------+---------------------+
 
 Every endpoint performs authentication by comparing for a hash from the API
 call's cookie to that of a session in Redis, avoiding the database entirely.
@@ -59,9 +45,10 @@ from flask import Flask, jsonify, request
 from flask_graphql import GraphQLView
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.utils import secure_filename
+from urllib.parse import unquote
 from PIL import Image
 
-from utils import load_config, hash_file, read_extension, del_prop
+from utils import load_config, hash_file, read_extension
 from model import Base
 from schema import schema
 from db import (
@@ -98,7 +85,7 @@ from db import (
     update_manufacturer,
     delete_manufacturer,
 )
-from sessions import create_session, verify_session, delete_session
+from session import create_session, authenticate_session, delete_session, verify_session, get_session
 
 db_session = scoped_session(
     sessionmaker(
@@ -122,80 +109,116 @@ app.add_url_rule(
     )
 )
 
+def with_token(fn):
+    def inner(*args, **kwargs):
+        token = None
+        if 'token' in request.cookies:
+            token = unquote(request.cookies.get('token'))
+        if token is None and 'Authorization' in request.headers:
+            token = request.headers.get('authorization').replace('Basic ', '')
+        if token is None:
+            return 'Missing token', 401
+        return fn(*args, **kwargs, token=token)
+    inner.__name__ = fn.__name__
+    return inner
+
+def with_session(fn):
+    @with_token
+    def inner(token, *args, **kwargs):
+        session = get_session(token)
+        if not session:
+            return 'Unauthorized', 401
+        return fn(*args, **kwargs, session=session)
+    inner.__name__ = fn.__name__
+    return inner
+
 @app.route('/config/file_support', methods=['GET'])
 def handle_supported_file_ext():
     try:
         return jsonify(load_config('supported_file_extensions')), 200
     except Exception as err:
-        print('Could not load config:', err)
+        print('Could not load config:\n', err)
         return '', 500
 
-@app.route('/session', methods=['POST', 'DELETE'])
+@app.route('/auth', methods=['GET'])
+@with_token
+def handle_auth(token):
+    """Flask route for responding to auth_request calls from NGINX"""
+    if verify_session(token):
+        return 'Authorized', 200
+    return 'Unauthorized', 401
+
+@app.route('/session', methods=['GET'])
+@with_session
+def handle_get_session(session):
+    return jsonify({ 'session': session }), 200
+
+@app.route('/session', methods=['PUT'])
 def handle_create_session():
-    """Flask route for managing sessions"""
-    try:
-        if 'token' not in request.json and request.method == 'POST':
-            if 'account_email' not in request.json:
-                return 'Missing email', 400
-            account_email = request.json['account_email']
-            create_session(account_email)
-            return jsonify({ 'success': True }), 201
+    """Flask route for creating sessions"""
+    if 'account_email' not in request.json:
+        return 'Missing email', 400
+    account_email = request.json['account_email']
+    create_session(account_email)
+    return jsonify({ 'success': True }), 201
 
-        if 'token' not in request.json:
-            return 'Missing token', 400
-        token = request.json['token']
+@app.route('/session', methods=['POST'])
+@with_token
+def handle_authenticate_session(token):
+    """Flask route for authenticating sessions"""
+    bearer_token = authenticate_session(token)
+    return jsonify({ 'token': bearer_token }), 200
 
-        if request.method == 'POST':
-            bearer_token = verify_session(token)
-            return jsonify({ 'token': bearer_token }), 200
+@app.route('/session', methods=['DELETE'])
+@with_token
+def handle_delete_session(token):
+    """Flask route for deleting sessions"""
+    delete_session(token)
+    return '', 204
 
-        if request.method == 'DELETE':
-            delete_session(token)
-            return '{}', 204
+def map_account_details(account):
+    return {
+        'role': account.account_role,
+        'name': account.account_name,
+        'handle': account.account_handle,
+        'email': account.account_email,
+        'created_at': account.created_at,
+        'edited_at': account.edited_at,
+    }
 
-    except Exception as err:
-        print('Could not create session:', err)
-    return '', 500
-
-# TODO: for every request below require that the account_id for the
+@app.route('/account', methods=['GET'])
+@with_session
+def handle_get_account(session):
+    """Flask route for retrieving a session's account information"""
+    account = select_account(account_email=session['account_email'])
+    return jsonify({ 'account': map_account_details(account) }), 200
 
 @app.route('/account', methods=['POST'])
-def handle_account():
+@with_session
+def handle_account(session):
     """Flask route for creating an account"""
     try:
-        if request.json is None or 'account_email' not in request.json:
-           return 'Missing email', 400
-
-        account_email = request.json['account_email']
-        account = select_account(account_email=account_email)
-
-        if account is None:
-            if 'account_name' not in request.json:
-                return 'Missing name', 400
-
-            name = request.json['account_name']
-
-            account_options = {
-                'account_email': account_email,
-                'account_name': request.json['account_name']
-            }
-            if 'account_role' in request.json:
-                account_options['account_role'] = request.json['account_role']
-            account = create_account(**account_options)
+        if 'account_name' not in request.json:
+            raise ValueError('Missing name')
+        if 'account_handle' not in request.json:
+            raise ValueError('Missing handle')
+        account = create_account(account_email=session['account_email'],
+                                 account_name=request.json['account_name'],
+                                 account_handle=request.json['account_handle'])
+        if not account:
+            raise AssertionError('Could not create account')
+        return jsonify({ 'account': map_account_details(account) }), 201
     except ValueError as err:
         return str(err), 400
+    except AssertionError as err:
+        return str(err), 500
 
-    if account is None:
-        return 'Could not find or create account', 500
-
-    return jsonify({ 'accountSafename': account.account_safename }), 201
-
-@app.route('/account/<account_safename>', methods=['POST'])
-def handle_update_account(account_safename):
+@app.route('/account/<account_handle>', methods=['POST'])
+def handle_update_account(account_handle):
     """Flask route for updating an account"""
     if account_options is None:
         return 'Bad request', 400
-    account = select_account(account_safename=account_safename)
+    account = select_account(account_handle=account_handle)
     if account is None:
         return 'Account not found', 404
     account_options = {}
@@ -207,37 +230,37 @@ def handle_update_account(account_safename):
         update_account(account.account_id, **account_options)
     return '', 200
 
-@app.route('/account/<account_safename>', methods=['DELETE'])
-def handle_delete_account(account_safename):
+@app.route('/account/<account_handle>', methods=['DELETE'])
+def handle_delete_account(account_handle):
     """Flask route for deleting an account"""
-    account = select_account(account_safename=account_safename)
+    account = select_account(account_handle=account_handle)
     if account is None:
         return 'Account not found', 404
     delete_account(account.account_id)
     return '', 204
 
 @app.route('/photo', methods=['PUT'])
-def handle_create_photo():
+@with_session
+def handle_create_photo(session):
     """Flask route for creating a photo"""
-    photo_options = {}
-    created_camera_id = None
-    created_camera_manufacturer_id = None
-    created_lens_id = None
-    created_lens_manufacturer_id = None
-
     if request.form is None:
         return 'Bad request', 400
+
+    account = select_account(account_email=session['account_email'])
+    if account is None:
+        return 'Account not found', 404
+
+    photo_options = {}
     for key in request.form:
         v = request.form[key]
         if v != 'null':
             photo_options[key] = v
-
-    account = select_account(account_safename=photo_options['account_safename'])
-    if account is None:
-        return 'Account not found', 404
-    # Replace account_safename with account_id
     photo_options['account_id'] = account.account_id
-    del_prop(photo_options, 'account_safename')
+
+    created_camera_id = None
+    created_camera_manufacturer_id = None
+    created_lens_id = None
+    created_lens_manufacturer_id = None
 
     if ('photo_title' not in photo_options or len(photo_options['photo_title']) == 0) \
        and ('photo_text' not in photo_options or len(photo_options['photo_text']) == 0):
@@ -277,7 +300,7 @@ def handle_create_photo():
                 photo_options['camera_id'] = camera.camera_id
                 created_camera_id = camera.camera_id
     except Exception as err:
-        print('Could not process camera equipment:', err)
+        print('Could not process camera equipment:\n', err)
         # clean up any created rows
         if created_camera_id is not None:
             delete_camera(created_camera_id)
@@ -329,7 +352,7 @@ def handle_create_photo():
                 photo_options['lens_id'] = lens.lens_id
                 created_lens_id = lens.lens_id
     except Exception as err:
-        print('Could not process lens equipment:', err)
+        print('Could not process lens equipment:\n', err)
         # clean up any created rows
         if created_lens_id is not None:
             delete_lens(created_lens_id)
@@ -562,127 +585,6 @@ def handle_create_reaction():
 def handle_delete_reaction():
     """Flask route for deleting an reaction"""
     delete_reaction(reaction_id)
-    return '', 204
-
-@app.route('/tag', methods=['PUT'])
-def handle_create_tag():
-    """Flask route for creating a tag"""
-    tag_options = request.json
-    if tag_options is None:
-        return 'Bad request', 400
-    tag = create_tag(**tag_options)
-    if tag is None:
-        return 'Error creating tag', 500
-    return jsonify({ 'tagId': tag.tag_id }), 201
-
-@app.route('/tag/<tag_id>', methods=['DELETE'])
-def handle_delete_tag(tag_id):
-    """Flask route for deleting a tag"""
-    delete_tag(tag_id)
-    return '', 204
-
-@app.route('/editor', methods=['PUT'])
-def handle_create_editor():
-    """Flask route for creating an editor"""
-    editor_options = request.json
-    if editor_options is None:
-        return 'Bad request', 400
-    editor = create_editor(**editor_options)
-    if editor is None:
-        return 'Error creating editor', 500
-    return jsonify({ 'editorId': editor.editor_id }), 201
-
-@app.route('/editor/<editor_id>', methods=['POST'])
-def handle_update_editor(editor_id):
-    """Flask route for updating an editor"""
-    editor_options = request.json
-    if editor_options is None:
-        return 'Bad request', 400
-    update_editor(editor_id, **editor_options)
-    return '', 200
-
-@app.route('/editor/<editor_id>', methods=['DELETE'])
-def handle_delete_editor(editor_id):
-    """Flask route for deleting an editor"""
-    delete_editor(editor_id)
-    return '', 204
-
-@app.route('/camera', methods=['PUT'])
-def handle_create_camera():
-    """Flask route for creating a camera"""
-    camera_options = request.json
-    if camera_options is None:
-        return 'Bad request', 400
-    camera = create_camera(**camera_options)
-    if camera is None:
-        return 'Error creating camera', 500
-    return jsonify({ 'cameraId': camera.camera_id }), 201
-
-@app.route('/camera/<camera_id>', methods=['POST'])
-def handle_update_camera(camera_id):
-    """Flask route for updating a camera"""
-    camera_options = request.json
-    if camera_options is None:
-        return 'Bad request', 400
-    update_camera(camera_id, **camera_options)
-    return '', 200
-
-@app.route('/camera/<camera_id>', methods=['DELETE'])
-def handle_delete_camera(camera_id):
-    """Flask route for deleting a camera"""
-    delete_camera(camera_id)
-    return '', 204
-
-@app.route('/lens', methods=['PUT'])
-def handle_create_lens():
-    """Flask route for creating a lens"""
-    lens_options = request.json
-    if lens_options is None:
-        return 'Bad request', 400
-    lens = create_lens(**lens_options)
-    if lens is None:
-        return 'Error creating lens', 500
-    return jsonify({ 'lensId': lens.lens_id }), 201
-
-@app.route('/lens/<lens_id>', methods=['POST'])
-def handle_update_lens(lens_id):
-    """Flask route for updating a lens"""
-    lens_options = request.json
-    if lens_options is None:
-        return 'Bad request', 400
-    update_lens(lens_id, **lens_options)
-    return '', 200
-
-@app.route('/lens/<lens_id>', methods=['DELETE'])
-def handle_delete_lens(lens_id):
-    """Flask route for deleting a lens"""
-    delete_lens(lens_id)
-    return '', 204
-
-@app.route('/manufacturer', methods=['PUT'])
-def handle_create_manufacturer():
-    """Flask route for creating a manufacturer"""
-    manufacturer_options = request.json
-    if manufacturer_options is None:
-        return 'Bad request', 400
-    manufacturer = create_manufacturer(**manufacturer_options)
-    if manufacturer is None:
-        return 'Error creating manufacturer', 500
-    return jsonify({ 'manufacturerId': manufacturer.manufacturer_id }), 201
-
-@app.route('/manufacturer/<manufacturer_id>', methods=['POST'])
-def handle_update_manufacturer(manufacturer_id):
-    """Flask route for updating a manufacturer"""
-    manufacturer_options = request.json
-    if manufacturer_options is None:
-        return 'Bad request', 400
-    update_manufacturer(manufacturer_id, **manufacturer_options)
-    return '', 200
-
-@app.route('/manufacturer/<manufacturer_id>', methods=['DELETE'])
-def handle_delete_manufacturer(manufacturer_id):
-    """Flask route for deleting a manufacturer"""
-    delete_manufacturer(manufacturer_id)
     return '', 204
 
 @app.teardown_appcontext

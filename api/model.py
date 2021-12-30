@@ -13,7 +13,7 @@ AccountRole = Enum('admin', 'user', name='account_role')
 ContentType = Enum('photo', 'edit', 'reply', name='content_type')
 EventType   = Enum('submit_photo', 'submit_edit', 'submit_reply', 'submit_reaction', 'follow',
                    name='event_type')
-Platform        = Enum('Android', 'iOS', 'Linux', 'macOS', 'Windows', name='platform')
+Platform    = Enum('Android', 'iOS', 'Linux', 'macOS', 'Windows', name='platform')
 
 AccountIdentity      = Identity('Account',      start= 100, cycle=True)
 PhotoIdentity        = Identity('Photo',        start= 200, cycle=True)
@@ -226,10 +226,8 @@ class Account(Base):
     __tablename__ = 'account'
     account_id = Column(Integer, AccountIdentity, primary_key=True)
     account_role = Column(AccountRole, nullable=False, default='user')
-    # TODO: allow all UTF-8 characaters in account_name and allow user to change it more frequently
     account_name = Column(String(TEXT_SHORT), unique=True, nullable=False)
-    # TODO: rename to account_safename to account_handle and allow user to specify it when signing up, but never change it
-    account_safename = Column(String(TEXT_SHORT), unique=True, nullable=False)
+    account_handle = Column(String(TEXT_SHORT), unique=True, nullable=False)
     account_email = Column(String(TEXT_LONG), unique=True, nullable=False)
     preview_file_id = Column(Integer, ForeignKey('file.file_id', onupdate='CASCADE',
                              ondelete='RESTRICT'))

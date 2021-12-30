@@ -16,7 +16,7 @@ const PhotoFields = ({
   manufacturers = [],
   fileSupport = {},
 }) => {
-  const [safename, setSafename] = useState('')
+  const [handle, setHandle] = useState('')
   const [showDetails, setShowDetails] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
   const [showLens, setShowLens] = useState(false)
@@ -28,9 +28,9 @@ const PhotoFields = ({
         label="Account"
         required
         type="text"
-        name="account_safename"
-        value={safename}
-        onChange={e => setSafename(e.currentTarget.value)}
+        name="account_handle"
+        value={handle}
+        onChange={e => setHandle(e.currentTarget.value)}
       />
 
       <Input

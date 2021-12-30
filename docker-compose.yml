@@ -17,8 +17,6 @@ services:
       - .env
     volumes:
       - ./config.json:/config.json:ro
-      - ./.session_lock:/session_lock:rw
-      - ./.htpasswd:/etc/nginx/.htpasswd:rw
       - ./data/storage:/storage:rw
     depends_on:
       - "db"
@@ -35,7 +33,6 @@ services:
       - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./.htpasswd:/etc/nginx/.htpasswd:ro
       - ./data/storage:/storage:ro
     command: >-
       /bin/sh -c '

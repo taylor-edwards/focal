@@ -2,7 +2,7 @@ query Focal {
   accounts {
     role: accountRole
     name: accountName
-    safename: accountSafename
+    handle: accountHandle
     email: accountEmail
     createdAt
     editedAt
@@ -234,6 +234,7 @@ query Focal {
     }
   }
   reactions {
+    id: reactionId
     name: reactionName
     emoji: reactionEmoji
     photos {

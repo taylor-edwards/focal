@@ -1,6 +1,3 @@
-import { FLASK_BASE } from 'config'
-import { fetchWithTimeout } from 'utils'
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).send('')
@@ -11,10 +8,10 @@ export default async function handler(req, res) {
     }
     const { email } = req.body
     const { createSession } = require('api')
-    const response = await createSession(email)
+    await createSession(email)
     return res.status(201).send('{}')
   } catch (err) {
     console.warn('Could not create session:\n', err)
+    res.status(503).send('Could not create session')
   }
-  res.status(503).send('Could not create session')
 }

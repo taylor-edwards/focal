@@ -13,13 +13,17 @@ const SignInForm = ({
   const handleSubmit = e => {
     const idx = email.indexOf('@')
     if (idx > 0 && idx < email.length - 1) {
-      onSubmit({ email })
-      e.preventDefault()
-      e.stopPropagation()
-      fetchWithTimeout('/api/session', {
-        method: 'POST',
-        body: JSON.stringify({ email }),
-      })
+      onSubmit(e)
+      if (!e.defaultPrevented) {
+        e.preventDefault()
+        e.stopPropagation()
+        fetchWithTimeout('/api/session', {
+          method: 'POST',
+          body: JSON.stringify({ email }),
+        })
+          .then(onSuccess)
+          .catch(onFailure)
+      }
     }
   }
   return (

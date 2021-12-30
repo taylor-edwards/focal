@@ -17,7 +17,6 @@ from model import (
     Tag,
     Reaction
 )
-import re
 from utils import load_config
 
 # Open a connection to the Postgres database
@@ -25,52 +24,50 @@ engine = create_engine("postgresql+psycopg2://"
                       f"{os.environ.get('POSTGRES_USER')}:{os.environ.get('POSTGRES_PASSWORD')}"
                       f"@db:5432/{os.environ.get('POSTGRES_DB')}")
 
-def select_account(account_id=None, account_email=None, account_safename=None):
+def select_account(account_id=None, account_email=None, account_handle=None):
     """Select an account by ID"""
     with Session(engine) as session:
+        account = None
         if account_id is not None:
-            return session.query(Account).filter_by(account_id=account_id).first()
-        if account_email is not None:
-            return session.query(Account).filter_by(account_email=account_email).first()
-        if account_safename is not None:
-            return session.query(Account).filter_by(account_safename=account_safename).first()
-        return None
+            account = session.query(Account).filter_by(account_id=account_id).first()
+        if account is None and account_email is not None:
+            account = session.query(Account).filter_by(account_email=account_email).first()
+        if account is None and account_handle is not None:
+            account = session.query(Account).filter_by(account_handle=account_handle).first()
+        return account
 
-def create_account(account_name, account_email):
+def create_account(account_email, account_name, account_handle):
     """Create an account"""
-    if not str.isascii(account_name):
-        raise TypeError(f'Expected string for account name, but got {type(account_name)}')
-    if not str.isascii(account_email):
-        raise TypeError(f'Expected string for account email, but got {type(account_email)}')
-    if len(account_name) < 2:
+    config = load_config()
+
+    account_email = account_email.lower()
+    account_handle = account_handle.lower()
+
+    name_len = len(account_name)
+    if name_len < 2:
         raise ValueError('Account name too short')
-    if not 1 < account_email.index('@') < len(account_email) - 1:
-        raise ValueError(f'Email does not appear valid ({account_email})')
-    for char in account_name:
-        # require names to use the character sets A-z, 0-9 and (allowed_chars) exclusively
+    if name_len > config['account_name_max_length']:
+        raise ValueError('Account name too long')
+
+    handle_len = len(account_handle)
+    if handle_len < 2:
+        raise ValueError('Account handle too short')
+    if handle_len > config['account_handle_max_length']:
+        raise ValueError('Account handle too long')
+    for char in account_handle:
+        # require handles to use the character sets a-z, 0-9 and _ exclusively
         x = ord(char)
-        if not(65 <= x <=  90 or # between A-Z \
-               97 <= x <= 122 or # between a-z \
-               48 <= x <=  57 or # between 0-9 \
-               char in load_config('allowed_chars')):
-            raise ValueError('Invalid character found in account name')
-    first_char_ord = ord(account_name[0])
-    # use normalized "safename" in URLs and to improve overall uniqueness of account names
-    safename = re.sub(' +', '_', re.sub('[^A-Za-z0-9 ]', '', account_name)).lower()
-    if len(safename) < 2:
-        raise ValueError('Name is too short')
+        if not(97 <= x <= 122 # between a-z
+            or 48 <= x <=  57 # between 0-9
+            or char == '_'):
+            raise ValueError('Invalid character found in account handle')
+
     with Session(engine) as session:
-        account = session.query(Account).filter_by(account_email=account_email).first()
-        if account is not None:
-            raise ValueError('Email in use')
-
-        account = session.query(Account).filter_by(account_safename=safename).first()
-        if account is not None:
-            raise ValueError('Name in use')
-
+        if select_account(account_email=account_email, account_handle=account_handle) is not None:
+            raise AssertionError('Account already exists')
         account = Account(
             account_name=account_name,
-            account_safename=safename,
+            account_handle=account_handle,
             account_email=account_email,
         )
         session.add(account)

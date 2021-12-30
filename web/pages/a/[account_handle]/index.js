@@ -9,8 +9,8 @@ export const getStaticProps = async context => {
   const { fetchAccount } = require('api')
   try {
     // pre-render only public profile pages
-    const accountSafename = context.params?.account_safename
-    const response = await fetchAccount({ accountSafename })
+    const accountHandle = context.params?.account_handle
+    const response = await fetchAccount({ accountHandle })
     if (!response || response.data.account === null) {
       throw new Error('Account not found')
     }
@@ -39,7 +39,7 @@ export const getStaticPaths = async () => {
     const response = await fetchAccounts()
     return {
       paths: response.data.accounts.map(
-        ({ accountSafename }) => `/a/${encodeURIComponent(accountSafename)}`),
+        ({ accountHandle }) => `/a/${encodeURIComponent(accountHandle)}`),
       fallback: true,
     }
   } catch (err) {
@@ -51,13 +51,13 @@ export const getStaticPaths = async () => {
   }
 }
 
-const AccountPage = ({ account }) => {
+const PublicAccountPage = ({ account }) => {
   const router = useRouter()
   if (router.isFallback) {
     return <Loading />
   }
   // If logged in user is the same as account, fetch the account details via
-  // GET /api/a/{accountSafename} with a valid session cookie
+  // GET /api/a/{accountHandle} with a valid session cookie
   // Account page
   return (
     <div>
@@ -102,4 +102,4 @@ const AccountPage = ({ account }) => {
   )
 }
 
-export default AccountPage
+export default PublicAccountPage
