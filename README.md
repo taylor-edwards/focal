@@ -1,4 +1,4 @@
-# Focal
+![Focal](web/public/focal-pics.png?raw=true "Focal")
 
 Focal is a place for photographers of all levels to learn and share digital photo editing workflows. Browse photos and use their raw files to share your editing process, or upload a photo of your own to see how other people would edit it. Learn how to use a variety of photo editing software, from technique to fine art.
 
