@@ -2,7 +2,7 @@
  * Account sign-up, sign-in and management page
  */
 
- export const getServerSideProps = async context => {
+export const getServerSideProps = async context => {
   try {
     const { parseCookie } = require('utils')
     const { getAccountDetails, getSession } = require('api')
