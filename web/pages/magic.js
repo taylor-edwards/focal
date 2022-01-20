@@ -11,10 +11,20 @@ export const getServerSideProps = async context => {
       if (!token) {
         throw new Error('Invalid session token provided')
       }
-      const secure = process.env.NODE_ENV === 'development' ? '' : ';Secure'
-      context.res.setHeader('set-cookie', [
-        `token=${encodeURIComponent(token)};max-age=31536000;HttpOnly${secure}`,
-      ])
+      const d = new Date()
+      d.setYear(d.getFullYear() + 1)
+      const cookieOptions = [
+        `token=${token}`,
+        'path=/',
+        `HttpOnly`,
+        `max-age=31536000`,
+        `expires=${d.toGMTString()}`,
+        `domain=${context.req.headers.host}`,
+      ]
+      if (process.env.NODE_ENV !== 'development') {
+        cookieOptions.push('Secure')
+      }
+      context.res.setHeader('set-cookie', cookieOptions.join(';'))
     } catch (err) {
       console.warn('Could not authorize session:\n', err)
     }

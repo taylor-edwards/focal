@@ -7,11 +7,17 @@ export const getServerSideProps = async context => {
   try {
     const { parseCookie } = require('utils')
     const { deleteSession } = require('api')
+    const cookieOptions = [
+      `token=`,
+      'path=/',
+      'HttpOnly',
+      'max-age=0',
+      `expires=Thu, 01 Jan 1970 00:00:00 GMT`,
+      `domain=${context.req.headers.host}`,
+    ]
+    context.res.setHeader('set-cookie', cookieOptions.join(';'))
     const token = parseCookie(context.req.headers.cookie)
     if (token) {
-      context.res.setHeader('set-cookie', [
-        `token=${encodeURIComponent(token)};max-age=0`,
-      ])
       await deleteSession(token)
     }
   } catch (err) {

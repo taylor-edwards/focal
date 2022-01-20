@@ -51,11 +51,10 @@ export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 ```
 
-5. Append these lines to your hosts file or create DNS records locally for them:
+5. Append these lines to your hosts file or create DNS records locally for them (this is to ensure correct cookie handling in development):
 ```sh
 # /etc/hosts
 127.0.0.1    local.pics
-127.0.0.1    api.local.pics
 127.0.0.1    cdn.local.pics
 ```
 
