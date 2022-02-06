@@ -7,7 +7,6 @@ import { useRouter } from 'next/router'
 import { id } from 'utils'
 import { submitPhoto, submitEdit } from 'api'
 import Button from 'components/Button'
-import Copyright from 'components/Copyright'
 import Input from 'components/Input'
 import PhotoFields from 'components/PhotoFields'
 import EditFields from 'components/EditFields'
@@ -143,41 +142,38 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
   }
 
   return (
-    <>
-      <main>
-        <form onSubmit={onSubmit}>
-          <PhotoFields
-            photo={photo}
-            setter={fields => setPhoto(p => ({ ...p, ...fields }))}
-            manufacturers={manufacturers}
-            fileSupport={fileSupport}
-          />
-          <ul className="flex-row">
-            {edits.map((edit, index) => (
-              <li key={edit.temp_id} className="card">
-                <Button
-                  title="Delete edit"
-                  appearance="link"
-                  className="close-btn"
-                  onClick={() => deleteEdit(index)}
-                >
-                  &times;
-                </Button>
-                <EditFields
-                  edit={edit}
-                  setter={setEdit(index)}
-                  fileSupport={fileSupport}
-                />
-              </li>
-            ))}
-          </ul>
-          <Button onClick={addEdit}>
-            + Add edit
-          </Button>
-        </form>
-      </main>
-      <Copyright />
-    </>
+    <main>
+      <form onSubmit={onSubmit}>
+        <PhotoFields
+          photo={photo}
+          setter={fields => setPhoto(p => ({ ...p, ...fields }))}
+          manufacturers={manufacturers}
+          fileSupport={fileSupport}
+        />
+        <ul className="flex-row">
+          {edits.map((edit, index) => (
+            <li key={edit.temp_id} className="card">
+              <Button
+                title="Delete edit"
+                appearance="link"
+                className="close-btn"
+                onClick={() => deleteEdit(index)}
+              >
+                &times;
+              </Button>
+              <EditFields
+                edit={edit}
+                setter={setEdit(index)}
+                fileSupport={fileSupport}
+              />
+            </li>
+          ))}
+        </ul>
+        <Button onClick={addEdit}>
+          + Add edit
+        </Button>
+      </form>
+    </main>
   )
 }
 

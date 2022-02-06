@@ -26,8 +26,6 @@ export const getServerSideProps = async context => {
 }
 
 import { useState } from 'react'
-import Copyright from 'components/Copyright'
-import DocumentFill from 'components/DocumentFill'
 import Logo from 'components/Logo'
 import SignInForm from 'components/SignInForm'
 import SignUpForm from 'components/SignUpForm'
@@ -38,45 +36,41 @@ const PrivateAccountPage = ({ account, session }) => {
   const showAccountSetup = !showSignin && !account
   const showAccount = !!account
   return (
-    <>
-      <DocumentFill />
-      <main className="login-page">
-        <article className="card col">
-          <Logo includeSubtext />
-          {showSignin && (
-            <>
-              {!magicLinkSent && (
-                <SignInForm onSuccess={() => setMagicLinkSent(true)} />
-              )}
-              {magicLinkSent && (
-                <>
-                  <h1>Email sent</h1>
-                  <p>Check your email for a link to finish signing in</p>
-                </>
-              )}
-            </>
-          )}
+    <main className="login-page">
+      <article className="card col">
+        <Logo includeSubtext />
+        {showSignin && (
+          <>
+            {!magicLinkSent && (
+              <SignInForm onSuccess={() => setMagicLinkSent(true)} />
+            )}
+            {magicLinkSent && (
+              <>
+                <h1>Email sent</h1>
+                <p>Check your email for a link to finish signing in</p>
+              </>
+            )}
+          </>
+        )}
 
-          {showAccountSetup && (
-            <>
-              <h1>Account details</h1>
-              <p>Finish setting up your account on Focal.</p>
-              <SignUpForm />
-            </>
-          )}
+        {showAccountSetup && (
+          <>
+            <h1>Account details</h1>
+            <p>Finish setting up your account on Focal.</p>
+            <SignUpForm />
+          </>
+        )}
 
-          {showAccount && (
-            <>
-              <h1>Your Account</h1>
-              <p>Name: {account.name}</p>
-              <p>Handle: {account.handle}</p>
-              <p>Email: {account.email}</p>
-            </>
-          )}
-        </article>
-      </main>
-      <Copyright />
-    </>
+        {showAccount && (
+          <>
+            <h1>Your Account</h1>
+            <p>Name: {account.name}</p>
+            <p>Handle: {account.handle}</p>
+            <p>Email: {account.email}</p>
+          </>
+        )}
+      </article>
+    </main>
   )
 }
 

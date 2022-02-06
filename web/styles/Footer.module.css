@@ -1,0 +1,14 @@
+.footer {
+  color: #eee;
+  margin-top: 100px;
+  text-align: center;
+}
+
+.copyright {
+  background: #000;
+  border-radius: var(--small-radius);
+  display: inline-block;
+  font-size: 0.75em;
+  letter-spacing: 0.07em;
+  padding: 10px 15px 15px;
+}
