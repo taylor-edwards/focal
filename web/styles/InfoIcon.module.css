@@ -1,0 +1,14 @@
+.infoIcon {
+  --icon-size: 14px;
+  border: 2px solid;
+  border-radius: var(--icon-size);
+  display: inline-block;
+  font-family: serif;
+  font-size: var(--icon-size);
+  font-style: italic;
+  font-weight: 700;
+  line-height: var(--icon-size);
+  padding: 2px 1px 2px 2px;
+  text-align: center;
+  width: var(--icon-size);
+}

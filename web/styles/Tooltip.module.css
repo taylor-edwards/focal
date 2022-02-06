@@ -1,0 +1,44 @@
+.tooltip {
+  float: right;
+  position: relative;
+}
+
+.hiddenInput {
+  height: 0;
+  opacity: 0;
+  position: absolute;
+  width: 0;
+}
+
+.infoLabel {
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.hiddenInput:hover + .infoLabel,
+.hiddenInput:focus + .infoLabel,
+.hiddenInput:checked + .infoLabel {
+  color: var(--chartreuse-1);
+  opacity: 1;
+}
+
+.body {
+  background: #000;
+  border-radius: var(--small-radius);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  display: none;
+  left: 50%;
+  margin: 10px 0;
+  padding: 10px 20px;
+  position: absolute;
+  text-align: center;
+  top: 100%;
+  transform: translateX(-50%);
+  width: 200px;
+  z-index: 1;
+}
+
+.hiddenInput:checked ~ .body {
+  display: block;
+}

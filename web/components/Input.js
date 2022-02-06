@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import { id } from 'utils'
+import Tooltip from 'components/Tooltip'
+import InfoIcon from 'components/InfoIcon'
 import Label from 'components/Label'
 import styles from 'styles/Input.module.css'
 
@@ -16,35 +18,20 @@ const Input = ({
   suggestions = [], // pass manufacturer/camera body/lens model lists here
   ...props
 }) => {
-  const inputId = useMemo(() => id(), []);
-  const reverseLabelOrder = ['checkbox', 'radio'].includes(type);
+  const inputId = useMemo(() => id(), [])
+  const reverseLabelOrder = ['checkbox', 'radio'].includes(type)
   const labelElement = !label ? null : (
     <div className={styles.inputLabel}>
-      <Label
-        htmlFor={inputId}
-        className={labelClassName}
-      >
+      <Label htmlFor={inputId} className={labelClassName}>
         {label}
       </Label>
       {info && (
-        <div className={styles.info}>
-          <input
-            type="checkbox"
-            className={styles.hiddenInput}
-            id={`${inputId}-info`}
-            onBlur={e => {
-              e.currentTarget.checked = false
-            }}
-          />
-          <label htmlFor={`${inputId}-info`} className={styles.infoLabel}>
-            <span className="info-icon" role="none">i</span>
-            <p className="aria-only">Show more info</p>
-          </label>
-          <p className={styles.infoBody}>{info}</p>
-        </div>
+        <Tooltip message={info}>
+          <InfoIcon />
+        </Tooltip>
       )}
     </div>
-  );
+  )
   return (
     <>
       {!reverseLabelOrder && labelElement}
@@ -67,7 +54,7 @@ const Input = ({
 
       {reverseLabelOrder && labelElement}
     </>
-  );
-};
+  )
+}
 
-export default Input;
+export default Input
