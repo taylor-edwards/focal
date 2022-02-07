@@ -1,0 +1,16 @@
+.body {
+  background: #000;
+  border-radius: var(--medium-radius);
+  box-sizing: border-box;
+  flex-grow: 1;
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 16px 32px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .body {
+    width: calc(100vw - 64px);
+  }
+}

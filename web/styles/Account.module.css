@@ -1,0 +1,9 @@
+.page {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  margin-bottom: 30px;
+}

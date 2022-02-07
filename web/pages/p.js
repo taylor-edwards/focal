@@ -40,38 +40,36 @@ const PhotoFeed = ({ photos }) => {
     return <Loading />
   }
   return (
-    <main>
-      <section>
-        <h1>Photo feed</h1>
-        {photos.map(photo => {
-          const handle = encodeURIComponent(photo.account.handle)
-          const photoLink = `/a/${handle}/p/${encodeURIComponent(photo.id)}`
-          return (
-            <article key={photo.id}>
-              <Link href={photoLink}>
-                {photo.title && <h4>{photo.title}</h4>}
-              </Link>
-              <Link href={`/a/${handle}`}>
-                <p>{photo.account.name} posted at <DateTime date={photo.createdAt} /></p>
-              </Link>
-              {photo.previewFile && <Image srcFile={photo.previewFile} />}
-              {photo.text && (
-                <Link href={photoLink}>{photo.text}</Link>
-              )}
-              {photo.rawFile && (
-                <Link href={photo.rawFile.path}>&darr; Download .{photo.rawFile.ext.toUpperCase()}</Link>
-              )}
-              {/* Reactions */}
-              {/* Download raw */}
-              {/* Replies */}
-              {/* Add reply */}
-              {/* Edits */}
-              {/* Add edit */}
-            </article>
-          )
-        })}
-      </section>
-    </main>
+    <section>
+      <h1>Recent photos</h1>
+      {photos.map(photo => {
+        const handle = encodeURIComponent(photo.account.handle)
+        const photoLink = `/a/${handle}/p/${encodeURIComponent(photo.id)}`
+        return (
+          <article key={photo.id}>
+            <Link href={photoLink}>
+              {photo.title && <h4>{photo.title}</h4>}
+            </Link>
+            <Link href={`/a/${handle}`}>
+              <p>{photo.account.name} posted at <DateTime date={photo.createdAt} /></p>
+            </Link>
+            {photo.previewFile && <Image srcFile={photo.previewFile} />}
+            {photo.text && (
+              <Link href={photoLink}>{photo.text}</Link>
+            )}
+            {photo.rawFile && (
+              <Link href={photo.rawFile.path}>&darr; Download .{photo.rawFile.ext.toUpperCase()}</Link>
+            )}
+            {/* Reactions */}
+            {/* Download raw */}
+            {/* Replies */}
+            {/* Add reply */}
+            {/* Edits */}
+            {/* Add edit */}
+          </article>
+        )
+      })}
+    </section>
   )
 }
 

@@ -1,3 +1,4 @@
+import Body from 'partials/Body'
 import DocumentFill from 'components/DocumentFill'
 import Footer from 'components/Footer'
 import Nav from 'components/Nav'
@@ -7,9 +8,9 @@ const Frame = ({ children, className = '' }) => (
   <>
     <DocumentFill />
     <div className={`${styles.frame} ${className}`}>
-      <Nav />
-      {children}
-      <Footer />
+      <Nav className={styles.nav} />
+      <Body>{children}</Body>
+      <Footer className={styles.footer} />
     </div>
   </>
 )

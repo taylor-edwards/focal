@@ -22,8 +22,6 @@ const PhotoFields = ({
   const [showLens, setShowLens] = useState(false)
   return (
     <>
-      <h2>New Photo</h2>
-
       <Input
         label="Account"
         required

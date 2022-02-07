@@ -142,7 +142,8 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
   }
 
   return (
-    <main>
+    <section>
+      <h1>Create post</h1>
       <form onSubmit={onSubmit}>
         <PhotoFields
           photo={photo}
@@ -173,7 +174,7 @@ const CreatePhoto = ({ manufacturers = [], fileSupport = {} }) => {
           + Add edit
         </Button>
       </form>
-    </main>
+    </section>
   )
 }
 

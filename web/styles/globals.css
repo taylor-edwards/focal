@@ -390,15 +390,6 @@ a:focus {
   grid-gap: 15px;
 }
 
-.login-page {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-  box-sizing: border-box;
-}
-
 .aria-only {
   height: 0;
   opacity: 0;
