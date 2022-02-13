@@ -272,10 +272,22 @@
   --red-1: #ff5d72;
   --red-2: #de3b50;
   --red-3: #b0283a;
+
+  --bg: 0, 0, 0;
+  --fg: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: 255, 255, 255;
+    --fg: 0, 0, 0;
+  }
 }
 
 html,
 body {
+  background: rgb(var(--bg));
+  color: rgb(var(--fg));
   font-family: var(--body-font);
   font-size: 16px;
   margin: 0;
@@ -330,9 +342,13 @@ select {
   cursor: pointer;
 }
 
+a {
+  font-weight: bold;
+}
+
 a:hover,
 a:focus {
-  color: #ccff4a;
+  color: var(--chartreuse-1);
 }
 
 .subheading {
@@ -368,19 +384,20 @@ a:focus {
 }
 
 .card {
-  background: #000;
-  border-bottom: 1px solid #eee;
-  border-top: 1px solid #eee;
-  color: #fff;
+  --border-opacity: 0.85;
+
+  align-items: center;
+  background: rgb(var(--bg));
+  border-bottom: 1px solid rgba(var(--fg), var(--border-opacity));
+  border-top: 1px solid rgba(var(--fg), var(--border-opacity));
+  color: rgb(var(--fg));
   display: flex;
   flex-direction: column;
   margin: 20px 0;
   max-width: 600px;
   min-width: 300px;
-  /*overflow: hidden;*/
-  padding: 10px 20px 25px;
+  padding: 15px 20px 30px;
   position: relative;
-  width: 100%;
 }
 
 .col {
@@ -410,8 +427,19 @@ button.close-btn {
 
 @media (min-width: 400px) {
   .card {
-    border: 1px solid #eee;
+    border: 1px solid rgba(var(--fg), var(--border-opacity));
     border-radius: var(--medium-radius);
     width: unset;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  a:hover,
+  a:focus {
+    color: var(--chartreuse-3);
+  }
+
+  .card {
+    --border-opacity: 0.15;
   }
 }

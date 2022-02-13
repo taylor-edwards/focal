@@ -4,8 +4,9 @@
 }
 
 .copyright {
-  background: #000;
+  background: rgb(var(--bg));
   border-radius: var(--small-radius);
+  color: rgb(var(--fg));
   display: inline-block;
   font-size: 0.75em;
   letter-spacing: 0.07em;

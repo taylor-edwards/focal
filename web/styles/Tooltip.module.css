@@ -23,10 +23,10 @@
 }
 
 .body {
-  background: #000;
+  background: rgb(var(--bg));
   border-radius: var(--small-radius);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-  color: #fff;
+  color: rgb(var(--fg));
   display: none;
   left: 50%;
   margin: 10px 0;

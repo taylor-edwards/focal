@@ -4,8 +4,14 @@ const DocumentFill = ({ pattern = 'memphis.png' }) => (
   <Head>
     <style>
       {`
-        html {
-          background: url(/${pattern}), #000 !important;
+        html, body {
+          background: url(/${pattern}), rgb(var(--bg)) !important;
+        }
+        @media (prefers-color-scheme: light) {
+          html, body {
+            /* TODO: add light variant of memphis.png */
+            background: rgb(var(--bg)) !important;
+          }
         }
       `}
     </style>

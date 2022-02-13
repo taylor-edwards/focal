@@ -1,9 +1,5 @@
-.page {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-}
-
-.logo {
-  margin-bottom: 30px;
+.card {
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+  gap: 15px;
+  margin: 60px 0;
 }

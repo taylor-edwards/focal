@@ -1,5 +1,5 @@
 .input {
-  background: #3a3a3a;
+  background: rgba(var(--fg), 0.12);
   border-radius: var(--small-radius);
   font-family: var(--body-font);
   font-size: 1em;
@@ -9,14 +9,32 @@
 }
 
 .input:focus {
-  outline: 2px solid #ccff4a;
+  outline: 3px solid var(--chartreuse-1);
 }
 
 .input:hover {
-  background: #444;
+  background: rgba(var(--fg), 0.18);
+}
+
+.input::placeholder {
+  opacity: 0.75;
 }
 
 .inputLabel {
   display: block;
   margin-bottom: 10px;
+}
+
+@media (prefers-color-scheme: light) {
+  .input {
+    background: rgba(var(--fg), 0.05);
+  }
+
+  .input:focus {
+    outline: 3px solid var(--chartreuse-2);
+  }
+
+  .input:hover {
+    background: rgba(var(--fg), 0.1);
+  }
 }

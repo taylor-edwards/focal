@@ -1,6 +1,6 @@
 .nav {
   align-items: flex-start;
-  background: linear-gradient(#000, rgba(0, 0, 0, 0));
+  background: linear-gradient(rgba(var(--bg), 1), rgba(var(--bg), 0));
   display: flex;
   justify-content: space-between;
 }
@@ -11,7 +11,8 @@
 }
 
 .links {
-  background: linear-gradient(315deg, #000, rgba(0, 0, 0, 0));
+  background: linear-gradient(315deg, rgba(var(--bg), 1), rgba(var(--bg), 0));
+  color: rgb(var(--fg));
   flex-direction: column;
   font-size: 0.875em;
   font-weight: bold;

@@ -19,7 +19,6 @@
   padding: 6px 24px;
   position: relative;
   text-transform: uppercase;
-  transition: background 50ms ease-out;
 }
 
 .btn:not(:disabled):hover,
@@ -33,12 +32,12 @@
 }
 
 .btn:disabled {
-  color: #333;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .btn:disabled::after {
-  background: #fff;
+  background: rgb(var(--fg));
   content: "";
   height: 100%;
   left: 0;
@@ -51,7 +50,6 @@
 .link {
   color: var(--chartreuse-1);
   font-weight: 700;
-  transition: color 50ms ease-out;
 }
 
 .link:not(:disabled):hover,
@@ -67,4 +65,14 @@
 .link:disabled {
   cursor: not-allowed;
   opacity: 0.8;
+}
+
+@media (prefers-color-scheme: light) {
+  .link {
+    letter-spacing: 0.02em;
+  }
+
+  .link {
+    color: var(--chartreuse-3);
+  }
 }

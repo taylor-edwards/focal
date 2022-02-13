@@ -1,7 +1,9 @@
 .body {
-  background: #000;
+  align-items: center;
   border-radius: var(--medium-radius);
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   flex-grow: 1;
   margin: 0 auto;
   max-width: 900px;

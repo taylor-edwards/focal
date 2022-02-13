@@ -26,6 +26,7 @@ export const getServerSideProps = async context => {
 }
 
 import { useState } from 'react'
+import Link from 'components/Link'
 import Logo from 'components/Logo'
 import SignInForm from 'components/SignInForm'
 import SignUpForm from 'components/SignUpForm'
@@ -37,7 +38,7 @@ const PersonalAccountPage = ({ account, session }) => {
   const showAccountSetup = !showSignin && !account
   const showAccount = !!account
   return (
-    <section className={styles.page}>
+    <section className={`card ${styles.card}`}>
       {!showAccount && <Logo includeSubtext className={styles.logo} />}
 
       {showSignin && (
@@ -68,6 +69,7 @@ const PersonalAccountPage = ({ account, session }) => {
           <p>Name: {account.name}</p>
           <p>Handle: {account.handle}</p>
           <p>Email: {account.email}</p>
+          <p><Link href="/l">Logout</Link></p>
         </>
       )}
     </section>
