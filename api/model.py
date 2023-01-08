@@ -269,6 +269,7 @@ class Photo(Base):
     lens_filter = Column(String(TEXT_MEDIUM), nullable=False)
     shutter_speed_denominator = Column(Integer)
     shutter_speed_numerator = Column(Integer)
+    taken_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=now())
     edited_at = Column(DateTime, nullable=False, onupdate=now(), default=now())
     CheckConstraint(raw_file_id is not None or preview_id is not None)

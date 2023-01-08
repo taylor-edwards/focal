@@ -127,7 +127,7 @@ def select_photo(photo_id=None, account_id=None, photo_title=None, preview_file_
 def create_photo(account_id, raw_file_id=None, preview_file_id=None,
                  camera_id=None, lens_id=None, photo_title='', photo_text='', aperture=None,
                  flash=None, focal_length=None, iso=None, lens_filter='',
-                 shutter_speed_denominator=None, shutter_speed_numerator=None):
+                 shutter_speed_denominator=None, shutter_speed_numerator=None, taken_at=None):
     """Create a photo"""
     # pylint: disable=too-many-arguments,too-many-locals
     with Session(engine) as session:
@@ -139,7 +139,7 @@ def create_photo(account_id, raw_file_id=None, preview_file_id=None,
                       photo_title=photo_title, photo_text=photo_text, aperture=aperture,
                       focal_length=focal_length, iso=iso, lens_filter=lens_filter,
                       shutter_speed_denominator=shutter_speed_denominator,
-                      shutter_speed_numerator=shutter_speed_numerator)
+                      shutter_speed_numerator=shutter_speed_numerator, taken_at=taken_at)
         session.add(photo)
         session.commit()
         session.refresh(photo)
@@ -153,7 +153,7 @@ def update_photo(
     photo_property_list = [
         'photo_title', 'photo_text', 'raw_file_id', 'preview_file_id',
         'camera_id', 'lens_id', 'aperture', 'flash', 'focal_length', 'iso',
-        'shutter_speed_denominator', 'shutter_speed_numerator'
+        'shutter_speed_denominator', 'shutter_speed_numerator', 'taken_at'
     ]
     photo_updates = {k: v for k, v in property_overrides.items() if k in photo_property_list}
     with Session(engine) as session:

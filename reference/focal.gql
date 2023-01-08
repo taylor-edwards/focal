@@ -60,8 +60,16 @@ query Focal {
       id: photoId
       title: photoTitle
       text: photoText
+      takenAt
       createdAt
       editedAt
+      location {
+        lat
+        long
+        elevation
+        placename
+        locale
+      }
       previewFile {
         path: filePath
         width: imageWidth
