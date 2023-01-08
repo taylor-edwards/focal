@@ -15,4 +15,3 @@ services:
       dockerfile: dev.Dockerfile
     volumes:
       - ./web:/web:ro
-      - ./web/.next:/web/.next:rw

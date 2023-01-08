@@ -13,19 +13,18 @@ services:
   api:
     build:
       context: ./api
+    command: >
+      bash -c 'while !</dev/tcp/db/5432; do sleep 1; done;
+      uwsgi --ini uwsgi.ini --enable-threads'
     env_file:
       - .env
     volumes:
       - ./config.json:/config.json:ro
       - ./data/storage:/storage:rw
-    depends_on:
-      - "db"
 
   web:
     build:
       context: ./web
-    depends_on:
-      - "api"
 
   proxy:
     image: nginx:mainline
