@@ -1,7 +1,7 @@
-FROM node:14
+FROM node:20
 MAINTAINER Taylor Edwards (taylor@focal.pics)
 
-RUN npm i -g npm@8
+RUN npm i -g npm
 
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV "production"

@@ -1,4 +1,4 @@
-FROM node:14
+FROM node:20
 MAINTAINER Taylor Edwards (taylor@focal.pics)
 
 ENV NEXT_TELEMETRY_DISABLED 1

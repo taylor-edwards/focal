@@ -15,6 +15,7 @@ const Link = ({
     passHref
     {...props}
     href={href ?? file?.path?.replace(/^.+(\/uploads\/[A-z0-9]+\.\w+)$/, '$1')}
+    legacyBehavior
   >
     <a
       className={className}
