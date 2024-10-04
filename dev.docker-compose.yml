@@ -2,7 +2,7 @@ version: "3"
 
 # Use different Dockerfiles and bind the working directories
 # as volumes for local development. Override the production compose file with:
-# ```docker-compose -f docker-compose.yml -f dev.docker-compose.yml up```
+# ```docker compose -f docker-compose.yml -f dev.docker-compose.yml up```
 services:
   api:
     build:

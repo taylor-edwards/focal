@@ -6,7 +6,7 @@ Sharing raw images and sidecar files is an essential element of Focal. Working w
 
 ## Codebase
 
-The `/api` directory contains a Flask app which handles connections to the database and hosts a GraphQL endpoint using SQLAlchemy and Graphene. The `/web` directory contains a Next.JS app that runs the website. These are both built as Docker images and ran with docker-compose alongside a PostgreSQL database and NGINX.
+The `/api` directory contains a Flask app which handles connections to the database and hosts a GraphQL endpoint using SQLAlchemy and Graphene. The `/web` directory contains a Next.JS app that runs the website. These are both built as Docker images and run with Docker Compose alongside a PostgreSQL database and NGINX.
 
 ## First time set up
 
@@ -64,7 +64,7 @@ Now that you're set up, continue on below to start running a local instance.
 
 Build and start all services for local development:
 ```sh
-docker-compose -f docker-compose.yml -f dev.docker-compose.yml up
+docker compose -f docker-compose.yml -f dev.docker-compose.yml up
 ```
 
 Access the web app at [local.pics:8080](http://local.pics:8080) and explore the data set at [local.pics:8080/graphql](http://local.pics:8080/api/graphql). You can make modifications to the API server and web app in the /api and /web directories respectively.
@@ -88,7 +88,7 @@ docker exec -it focal_db_1 psql focal -U focal_api
 
 1. Use Docker Compose to create and test production images:
 ```sh
-docker-compose up --build
+docker compose up --build
 # should generate images named focal_api and focal_web
 ```
 
@@ -100,7 +100,7 @@ docker push docker.focal.pics/focal_api
 
 3. Restart affected containers:
 ```sh
-DOCKER_HOST="ssh://docker@docker.focal.pics" docker-compose pull && docker-compose up --detach
+DOCKER_HOST="ssh://docker@docker.focal.pics" docker compose pull && docker compose up --detach
 ```
 
 ## Managing dependencies
